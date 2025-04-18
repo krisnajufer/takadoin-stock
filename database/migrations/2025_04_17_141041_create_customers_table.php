@@ -17,9 +17,12 @@ return new class extends Migration
             $table->string('lastname')->nullable();
             $table->char('gender', 1);
             $table->string('phone')->unique();
-            $table->string('created_by');
-            $table->string('updated_by')->nullable();
+            $table->string('created_by')->index();
+            $table->string('updated_by')->index()->nullable();
             $table->timestamps();
+            
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
         });
     }
 

@@ -17,13 +17,19 @@ return new class extends Migration
             $table->dateTime('posting_date')->index();
             $table->string('status');
             $table->double('total_qty');
-            $table->string('created_by');
-            $table->string('updated_by')->nullable();
-            $table->string('submitted_by')->nullable();
-            $table->string('cancelled_by')->nullable();
+            $table->string('created_by')->index();
+            $table->string('updated_by')->index()->nullable();
+            $table->string('submitted_by')->index()->nullable();
+            $table->string('cancelled_by')->index()->nullable();
             $table->timestamps();
             $table->dateTime('submitted_at')->nullable();
             $table->dateTime('cancelled_at')->nullable();
+
+            $table->foreign('purchase_order_id')->references('id')->on('purchase_orders')->onDelete('restrict');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('submitted_by')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('cancelled_by')->references('id')->on('users')->onDelete('restrict');
         });
     }
 

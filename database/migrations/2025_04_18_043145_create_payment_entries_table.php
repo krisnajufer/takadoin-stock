@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('manufactures', function (Blueprint $table) {
+        Schema::create('payment_entries', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->dateTime('posting_date');
-            $table->string('status');
+            $table->string('transaction_type');
+            $table->string('transaction_id')->index();
+            $table->string('mode_of_payment_id')->index();
+            $table->double('paid_amount');
             $table->string('created_by')->index();
             $table->string('updated_by')->index()->nullable();
             $table->string('submitted_by')->index()->nullable();
@@ -23,6 +26,7 @@ return new class extends Migration
             $table->dateTime('submitted_at')->nullable();
             $table->dateTime('cancelled_at')->nullable();
 
+            $table->foreign('mode_of_payment_id')->references('id')->on('mode_of_payments')->onDelete('restrict');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
             $table->foreign('submitted_by')->references('id')->on('users')->onDelete('restrict');
@@ -35,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('manufactures');
+        Schema::dropIfExists('payment_entries');
     }
 };

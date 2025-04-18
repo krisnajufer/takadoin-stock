@@ -17,9 +17,12 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->boolean('is_active')->default(true);
             $table->string('address');
-            $table->string('created_by');
-            $table->string('updated_by');
+            $table->string('created_by')->index();
+            $table->string('updated_by')->index()->nullable();
             $table->timestamps();
+
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
         });
     }
 

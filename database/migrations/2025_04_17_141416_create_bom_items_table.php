@@ -12,8 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bom_items', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
+            $table->string('bom_id')->index();
+            $table->string('item_id')->index();
+            $table->double('quantity');
+            $table->double('price');
+            $table->double('amount');
             $table->timestamps();
+
+            $table->foreign('bom_id')->references('id')->on('boms')->onDelete('cascade');
+            $table->foreign('item_id')->references('id')->on('items')->onDelete('restrict');
         });
     }
 

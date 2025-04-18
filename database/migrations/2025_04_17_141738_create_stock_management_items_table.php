@@ -12,8 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_management_items', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
+            $table->string('stock_management_id')->index();
+            $table->string('item_id')->index();
+            $table->double('quantity');
             $table->timestamps();
+
+            $table->foreign('stock_management_id')->references('id')->on('stock_managements')->onDelete('cascade');
+            $table->foreign('item_id')->references('id')->on('items')->onDelete('restrict');
         });
     }
 
