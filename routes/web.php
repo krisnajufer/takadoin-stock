@@ -14,5 +14,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('admin.layouts.app');
+});
+Route::get('/customer', function () {
+    return view('admin.pages.customer.index');
+});
+Route::get('/customer/create', function () {
+    return view('admin.pages.customer.form');
 });
