@@ -1,12 +1,17 @@
-@props(['search_input' => [], 'table_columns' => [], 'title' => '', 'class_dt' => ''])
+@props(['search_input' => [], 'table_columns' => [], 'title' => '', 'class_dt' => '', 'model' => ''])
 
 <x-admin.layouts.app title="{{ $title }}">
     <x-slot:customStyle>
         <link rel="stylesheet" href="{{ asset('admin/custom/css/list.css') }}">
+        
     </x-slot:customStyle>
     <x-slot:customButton>
         <div class="d-flex gap-3">
-            <a href="" class="btn btn-primary rounded py-1 text-sm" id="new-button">Add {{ $title }}</a>
+            <a href="{{ route(strtolower($title) . '.add') }}" class="btn btn-primary rounded py-1 text-sm"
+                id="new-button">
+                Add {{ $title }}
+            </a>
+
 
             <div class="dropdown d-none" id="action-button">
                 <button class="btn btn-warning-600 not-active py-1 dropdown-toggle toggle-icon text-sm" type="button"
@@ -24,9 +29,8 @@
         <div class="card-header d-flex gap-3">
             <x-admin.search-input :names="$search_input" />
         </div>
-        <div class="card-body">
-            <x-admin.table :headers="$table_columns">
-                {{ $slot }}
+        <div class="card-body overflow-auto">
+            <x-admin.table :headers="$table_columns" model="{{ $model }}">
             </x-admin.table>
         </div>
     </x-admin.card>

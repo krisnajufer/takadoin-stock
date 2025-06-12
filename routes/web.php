@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CustomerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,12 +14,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('admin.layouts.app');
-});
-Route::get('/customer', function () {
-    return view('admin.pages.customer.index');
-});
-Route::get('/customer/create', function () {
-    return view('admin.pages.customer.form');
+// Route::get('/', function () {
+//     return view('admin.pages.customer.form-customize');
+// });
+// Route::get('/customer', function () {
+//     return view('admin.pages.customer.index');
+// });
+// Route::get('/customer/create', function () {
+//     return view('admin.pages.customer.form');
+// });
+
+Route::controller(CustomerController::class)->prefix('/customer/')->name('customer.')->group(function () {
+    Route::get('getLinkOptions', 'getLinkOptions')->name('getLinkOptions');
+    Route::get('', 'index')->name('index');
+    Route::get('/getData', 'getData')->name('getData');
+    Route::get('/add', 'create')->name('add');
+    Route::post('/store', 'store')->name('store');
 });

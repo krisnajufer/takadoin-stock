@@ -1,0 +1,11 @@
+.form-control:not(textarea),
+.form-select {
+    height: 2.2rem !important;
+}
+
+.form-control:not(textarea),
+.form-control::placeholder,
+.form-select,
+select option {
+    font-size: 0.85rem !important;
+}

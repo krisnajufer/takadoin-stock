@@ -15,12 +15,12 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('firstname')->index();
             $table->string('lastname')->nullable();
-            $table->char('gender', 1);
+            $table->char('gender', 7);
             $table->string('phone')->unique();
-            $table->string('created_by')->index();
+            $table->string('created_by')->index()->nullable();
             $table->string('updated_by')->index()->nullable();
             $table->timestamps();
-            
+
             $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
         });
