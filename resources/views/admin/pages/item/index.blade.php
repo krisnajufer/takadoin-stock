@@ -60,6 +60,7 @@
 @endsection
 
 @push('custom-script')
+    <script src="{{ asset('admin/custom/js/list.js') }}"></script>
     <script>
         $(document).ready(function() {
             let table = $('#dataTable').DataTable({
@@ -93,11 +94,19 @@
                             return data == 1 ? 'Material' : 'Barang Jadi';
                         }
                     }
-                ]
+                ],
+                columnDefs: [{
+                    orderable: false,
+                    targets: [0]
+                }]
             });
 
             $('#search_item, #search_is_material').on('keyup change', function() {
                 table.draw();
+            });
+
+            table.on('change', '.check-data', function() {
+                showHideButton();
             });
         });
     </script>
