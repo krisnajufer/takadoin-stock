@@ -5,33 +5,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Takadoin - {{ $title ?? 'Dashboard' }}</title>
+    <title>Takadoin - @yield('title')</title>
     <link rel="icon" type="image/png" href="assets/images/favicon.png" sizes="16x16">
 
-    <x-admin.partials.style />
-    {{ $customStyle ?? '' }}
+    @include('admin.partials.style')
+    @stack('custom-style')
 </head>
 
 <body>
-    <x-admin.partials.sidebar />
+    @include('admin.partials.sidebar')
 
     <main class="dashboard-main">
-        <x-admin.partials.navbar />
+        @include('admin.partials.navbar')
 
         <div class="dashboard-main-body">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
-                <h6 class="fw-semibold mb-0">{{ $title ?? 'Dashboard' }}</h6>
-                {{ $customButton ?? '' }}
+                <h6 class="fw-semibold mb-0">@yield('title')</h6>
+                @stack('custom-button')
             </div>
 
-            {{ $slot }}
+            @yield('content')
         </div>
 
-        <x-admin.partials.footer />
+        @include('admin.partials.footer')
     </main>
 
-    <x-admin.partials.script />
-    {{ $customScript ?? '' }}
+    @include('admin.partials.script')
+    @stack('custom-script')
 
 </body>
 

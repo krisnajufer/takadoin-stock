@@ -37,39 +37,39 @@ $(document).ready(function () {
     //     ]
     // });
 
-    let table = new DataTable('#dataTable', {
-        // ajax: "/" + $('#dataTable').attr('model') + "/getData",
-        ajax: {
-            url: "/" + $('#dataTable').attr('model') + "/getData",
-            dataSrc: 'data'
-        },
-        serverSide: true,
-        processing: true,
-        column: [{
-            data: "id",
-            render: function (data, type, row, meta) {
-                let html = '<div class="form-check style-check d-flex align-items-center">'
-                html += '<input class="form-check-input check-data" type="checkbox">'
-                html += '</div>'
-                return html
-            }
-        }, {
-            data: "id"
-        },
-        {
-            data: "firstname",
-            render: function (data, type, row, meta) {
-                return row.firstname + " " + row.lastname;
-            }
-        },
-        {
-            data: "gender"
-        },
-        {
-            data: "phone"
-        }
-        ]
-    })
+    // let table = new DataTable('#dataTable', {
+    //     // ajax: "/" + $('#dataTable').attr('model') + "/getData",
+    //     ajax: {
+    //         url: "/" + $('#dataTable').attr('model') + "/getData",
+    //         dataSrc: 'data'
+    //     },
+    //     serverSide: true,
+    //     processing: true,
+    //     column: [{
+    //         data: "id",
+    //         render: function (data, type, row, meta) {
+    //             let html = '<div class="form-check style-check d-flex align-items-center">'
+    //             html += '<input class="form-check-input check-data" type="checkbox">'
+    //             html += '</div>'
+    //             return html
+    //         }
+    //     }, {
+    //         data: "id"
+    //     },
+    //     {
+    //         data: "firstname",
+    //         render: function (data, type, row, meta) {
+    //             return row.firstname + " " + row.lastname;
+    //         }
+    //     },
+    //     {
+    //         data: "gender"
+    //     },
+    //     {
+    //         data: "phone"
+    //     }
+    //     ]
+    // })
 });
 
 function checkAll(checked) {
