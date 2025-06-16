@@ -41,12 +41,12 @@
             </li>
             <li class="sidebar-menu-group-title">Application</li>
             <li>
-                <a href="email.html">
+                <a href="{{ route('item.material.index') }}">
                     <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
-                    <span>Email</span>
+                    <span>Material</span>
                 </a>
             </li>
-            <li>
+            {{-- <li>
                 <a href="chat-message.html">
                     <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>
                     <span>Chat</span>
@@ -81,9 +81,9 @@
                             Edit</a>
                     </li>
                 </ul>
-            </li>
+            </li> --}}
 
-            <li class="sidebar-menu-group-title">Application</li>
+            {{-- <li class="sidebar-menu-group-title">Application</li>
 
             <li class="dropdown">
                 <a href="javascript:void(0)">
@@ -351,7 +351,7 @@
                                 class="ri-circle-fill circle-icon text-danger-main w-auto"></i> Payment Gateway</a>
                     </li>
                 </ul>
-            </li>
+            </li> --}}
         </ul>
     </div>
 </aside>

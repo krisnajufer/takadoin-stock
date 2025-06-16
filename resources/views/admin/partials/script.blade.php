@@ -19,3 +19,4 @@
 {{-- <script src="assets/js/lib/slick.min.js"></script> --}}
 <!-- main js -->
 <script src="{{ asset('admin/assets/js/app.js') }}"></script>
+<script src="{{ asset('admin/custom/js/sweetalert.js') }}"></script>

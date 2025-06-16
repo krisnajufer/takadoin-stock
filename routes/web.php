@@ -16,8 +16,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::controller(ItemController::class)->prefix('/item')->name('item.')->group(function () {
-    Route::get('/', 'index')->name('index');
-    Route::get('/get_data', 'get_data')->name('get_data');
-    Route::get('/create', 'create')->name('create');
-    Route::post('/store', 'store')->name('store');
+    Route::prefix('/material')->name('material.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get_data', 'get_data')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/edit/{id}', 'edit')->name('edit');
+        Route::post('/update', 'update')->name('update');
+        Route::post('/destroy', 'destroy')->name('destroy');
+    });
 });

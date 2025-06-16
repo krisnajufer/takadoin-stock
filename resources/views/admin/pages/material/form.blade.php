@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title')
-    Item
+    Material
 @endsection
 
 @push('custom-style')
@@ -28,13 +28,15 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <form id="{{ $action }}">
+            <form data-id="{{ $action }}">
                 <div class="row gy-3">
+                    <input type="hidden" value="{{ isset($item) ? $item->id : '' }}" id="id" name="id">
                     <div class="col-12">
-                        <label class="form-label">Nama Barang</label>
-                        <input type="text" name="name" class="form-control" placeholder="Masukkan Nama Barang">
+                        <label class="form-label">Nama Material</label>
+                        <input type="text" name="name" class="form-control" placeholder="Masukkan Nama Material"
+                            value="{{ isset($item) ? $item->name : '' }}">
                     </div>
-                    <div class="col-12">
+                    {{-- <div class="col-12">
                         <div class="form-switch switch-primary d-flex align-items-center gap-3">
                             <input class="form-check-input" type="checkbox" role="switch" id="is_material"
                                 name="is_material" checked value="1">
@@ -42,7 +44,7 @@
                                 for="is_material">Bahan
                                 Material</label>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </form>
         </div>
@@ -50,10 +52,13 @@
 @endsection
 
 @push('custom-script')
-    <script src="{{ asset('admin/custom/js/sweetalert.js') }}"></script>
     <script>
         $(document).ready(function() {
             $('#store-button').click(function(e) {
+                e.preventDefault();
+                $('form').trigger('submit');
+            });
+            $('#update-button').click(function(e) {
                 e.preventDefault();
                 $('form').trigger('submit');
             });
@@ -62,11 +67,11 @@
                 e.preventDefault()
                 var formData = new FormData(this);
                 formData.append("_token", "{{ csrf_token() }}");
-                console.log("done");
+                formData.append("is_material", 1);
 
                 $.ajax({
                     type: "POST",
-                    url: "/item/" + this.id,
+                    url: "/item/material/" + $(this).data("id"),
                     data: formData,
                     dataType: "json",
                     processData: false,
@@ -77,7 +82,11 @@
                         icon: "success",
                         title: "Success",
                         text: resp,
-                        timer: 3000
+                        timer: 3000,
+                        showConfirmButton: false, // agar tidak ada tombol OK
+                        timerProgressBar: true
+                    }).then(() => {
+                        window.location.href = "/item/material";
                     });
                 }).fail(function(resp) {
                     Swal.fire({

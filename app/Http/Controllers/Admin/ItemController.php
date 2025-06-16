@@ -16,7 +16,8 @@ class ItemController extends Controller
      */
     public function index()
     {
-        return view('admin.pages.item.index');
+        $url = explode("/", url()->current());
+        return view('admin.pages.' . $url[4] . '.index');
     }
 
     /**
@@ -25,7 +26,8 @@ class ItemController extends Controller
     public function create()
     {
         $result["action"] = "store";
-        return view('admin.pages.item.form', $result);
+        $url = explode("/", url()->current());
+        return view('admin.pages.' . $url[4] . '.form', $result);
     }
 
     /**
@@ -66,23 +68,57 @@ class ItemController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $url = explode("/", url()->current());
+        $result['item'] = Item::find($id);
+        $result["action"] = "update";
+        return view('admin.pages.' . $url[4] . '.form', $result);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        //
+        $url = explode("/", url()->current());
+        $validator = Validator::make($request->all(), Item::rules());
+
+        if ($validator->fails()) {
+            return response()->json($validator->getMessageBag(), 400);
+        }
+
+
+        DB::beginTransaction();
+        try {
+            $item = Item::find($request->id);
+            if (!isset($request->is_material)) {
+            }
+            $item->name = $request->name;
+            $item->save();
+            DB::commit();
+            return response()->json("success updated data " . $url[4], 200);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json($ex->getMessage(), 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        //
+        $url = explode("/", url()->current());
+        DB::beginTransaction();
+        try {
+            $ids = $request->json()->all();
+            Item::whereIn('id', $ids['data'])->delete();
+
+            DB::commit();
+            return response()->json("success deleted data " . $url[4], 200);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json($ex->getMessage(), 500);
+        }
     }
 
     public function get_data(Request $request)
