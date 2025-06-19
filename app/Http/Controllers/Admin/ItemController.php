@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Item;
+use App\Models\ItemStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -27,6 +28,7 @@ class ItemController extends Controller
     {
         $result["action"] = "store";
         $url = explode("/", url()->current());
+        $result["materials"] = Item::where("is_material", 1)->get();
         return view('admin.pages.' . $url[4] . '.form', $result);
     }
 
@@ -44,9 +46,19 @@ class ItemController extends Controller
         DB::beginTransaction();
         try {
             $item = new Item();
+            $item->id = Item::get_new_code($request->is_material);
             $item->name = $request->name;
-            $item->is_material = isset($request->is_material) ? $request->is_material : 0;
+            $item->is_material = $request->is_material;
             $item->save();
+
+            $item_stock = new ItemStock();
+            $item_stock->item_id = $item->id;
+            $item_stock->save();
+
+            if (!$request->is_material) {
+                # code...
+            }
+
             DB::commit();
             return response()->json("success add new data item", 200);
         } catch (\Exception $ex) {
@@ -112,6 +124,7 @@ class ItemController extends Controller
         try {
             $ids = $request->json()->all();
             Item::whereIn('id', $ids['data'])->delete();
+            ItemStock::whereIn('item_id', $ids['data'])->delete();
 
             DB::commit();
             return response()->json("success deleted data " . $url[4], 200);
@@ -123,16 +136,42 @@ class ItemController extends Controller
 
     public function get_data(Request $request)
     {
-        $query = Item::query();
+        $query = Item::query()
+            ->join('item_stocks', 'items.id', '=', 'item_stocks.item_id')
+            ->selectRaw('items.id AS id, items.name AS name,  items.is_material AS is_material, item_stocks.actual_qty AS qty');
 
+        if ($request->filled('id')) {
+            $query->where('items.id', 'like', "%{$request->id}%");
+        }
         if ($request->filled('name')) {
-            $query->where('name', 'like', "%{$request->name}%");
+            $query->where('items.name', 'like', "%{$request->name}%");
         }
 
         if ($request->filled('is_material') && $request->is_material != "") {
-            $query->where('is_material', '=', $request->is_material);
+            $query->where('items.is_material', '=', $request->is_material);
         }
 
         return DataTables::of($query)->toJson();
+    }
+
+    public function get_data_select(Request $request)
+    {
+        $query = Item::query()
+            ->join('item_stocks', 'items.id', '=', 'item_stocks.item_id')
+            ->selectRaw('items.id AS id, items.name AS text')
+            ->where('items.is_material', $request->is_material)
+            ->where('item_stocks.actual_qty', '>', 0);
+
+        if ($request->filled('search')) {
+            $query->where('items.id', 'like', "%{$request->search}%")
+                ->orWhere('items.name', 'like', "%{$request->search}%");
+        }
+
+        // Optional: Tambahkan limit untuk performa
+        $results = $query->limit(10)->get();
+
+        return response()->json([
+            'results' => $results
+        ]);
     }
 }

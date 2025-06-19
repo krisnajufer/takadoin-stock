@@ -22,3 +22,7 @@
 {{-- <link rel="stylesheet" href="assets/css/lib/slick.css"> --}}
 <!-- main css -->
 <link rel="stylesheet" href="{{ asset('admin/assets/css/style.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.4.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+
+<link rel="stylesheet" href="{{ asset('admin/custom/css/select2.min.css') }}">

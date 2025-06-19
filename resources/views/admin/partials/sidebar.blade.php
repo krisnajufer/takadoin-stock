@@ -46,6 +46,12 @@
                     <span>Material</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('item.bouquet.index') }}">
+                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                    <span>Bouquet</span>
+                </a>
+            </li>
             {{-- <li>
                 <a href="chat-message.html">
                     <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>

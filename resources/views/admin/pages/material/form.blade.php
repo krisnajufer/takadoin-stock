@@ -10,6 +10,7 @@
 
 @push('custom-button')
     <div class="d-flex gap-3">
+        <a class="btn btn-secondary rounded py-1 text-sm" href="{{ route('item.material.index') }}">Back</a>
         <button class="btn btn-primary rounded py-1 text-sm" id="{{ $action }}-button">Save</button>
 
         {{-- <div class="dropdown d-none" id="action-button">

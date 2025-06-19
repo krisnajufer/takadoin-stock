@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title')
-    Material
+    Bouquet
 @endsection
 
 @push('custom-style')
@@ -10,9 +10,9 @@
 
 @push('custom-button')
     <div class="d-flex gap-3">
-        <a href="{{ route('item.material.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
-            Add Material
-        </a>
+        <a href="{{ route('item.bouquet.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
+            Add Bouquet
+        </a> 
 
         <div class="dropdown d-none" id="action-button">
             <button class="btn btn-warning-600 not-active py-1 dropdown-toggle toggle-icon text-sm" type="button"
@@ -34,11 +34,11 @@
         <div class="card-header d-flex gap-3">
             <div>
                 <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
-                    placeholder="Kode Material">
+                    placeholder="Kode Bouquet">
             </div>
             <div>
                 <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
-                    placeholder="Nama Material">
+                    placeholder="Nama Bouquet">
             </div>
         </div>
         <div class="card-body overflow-auto">
@@ -50,8 +50,8 @@
                                 <input class="form-check-input" type="checkbox" id="check-all" />
                             </div>
                         </th>
-                        <th>Kode Material</th>
-                        <th>Nama Material</th>
+                        <th>Kode Bouquet</th>
+                        <th>Nama Bouquet</th>
                         <th>Stok</th>
                     </tr>
                 </thead>
@@ -72,11 +72,11 @@
                 bLengthChange: false,
                 bFilter: false,
                 ajax: {
-                    url: "{{ route('item.material.get_data') }}",
+                    url: "{{ route('item.bouquet.get_data') }}",
                     data: function(d) {
                         d.name = $('#search_item').val();
                         d.id = $('#search_id').val();
-                        d.is_material = 1;
+                        d.is_material = 0;
                     }
                 },
                 columns: [{
@@ -124,7 +124,7 @@
                 }
 
                 let rowData = table.row(this).data();
-                window.location.href = "/item/material/edit/" + rowData.id
+                window.location.href = "/item/bouquet/edit/" + rowData.id
 
             });
 
@@ -137,7 +137,7 @@
                 });
                 $.ajax({
                     type: "POST",
-                    url: "/item/material/destroy",
+                    url: "/item/bouquet/destroy",
                     data: JSON.stringify({
                         data: values
                     }),
