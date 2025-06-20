@@ -12,7 +12,7 @@
     <div class="d-flex gap-3">
         <a href="{{ route('item.bouquet.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
             Add Bouquet
-        </a> 
+        </a>
 
         <div class="dropdown d-none" id="action-button">
             <button class="btn btn-warning-600 not-active py-1 dropdown-toggle toggle-icon text-sm" type="button"
@@ -37,7 +37,7 @@
                     placeholder="Kode Bouquet">
             </div>
             <div>
-                <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
+                <input type="text" name="search_item" id="search_item" class="form-control h-25 search-input"
                     placeholder="Nama Bouquet">
             </div>
         </div>
@@ -124,7 +124,7 @@
                 }
 
                 let rowData = table.row(this).data();
-                window.location.href = "/item/bouquet/edit/" + rowData.id
+                window.location.href = "/item/bouquet/edit/" + rowData.id.replaceAll('/', '-')
 
             });
 

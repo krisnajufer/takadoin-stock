@@ -14,8 +14,11 @@
 @endpush
 
 @push('custom-button')
-    <div class="d-flex gap-3">
-        <button class="btn btn-primary rounded py-1 text-sm" id="{{ $action }}-button">Save</button>
+    <div class="d-flex gap-2">
+        <a class="btn btn-secondary rounded py-1 text-sm" href="{{ route('item.bouquet.index') }}">Back</a>
+        @if (!isset($item))
+            <button class="btn btn-primary rounded py-1 text-sm" id="{{ $action }}-button">Save</button>
+        @endif
     </div>
 @endpush
 
@@ -28,7 +31,7 @@
                     <div class="col-12">
                         <label class="form-label">Nama Bouquet</label>
                         <input type="text" name="name" class="form-control" placeholder="Masukkan Nama Bouquet"
-                            value="{{ isset($item) ? $item->name : '' }}">
+                            value="{{ isset($item) ? $item->name : '' }}" {{ isset($item) ? 'readonly' : '' }}>
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="bom">BOM</label>
@@ -42,7 +45,8 @@
                                 <tr>
                                     <th>
                                         <div class="form-check style-check d-flex align-items-center">
-                                            <input class="form-check-input" type="checkbox" id="check-all" />
+                                            <input class="form-check-input" type="checkbox" id="check-all"
+                                                {{ isset($item) ? 'disabled' : '' }} />
                                         </div>
                                     </th>
                                     <th>Material</th>
@@ -50,26 +54,55 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="form-check style-check d-flex align-items-center">
-                                            <input class="form-check-input check-data" type="checkbox" />
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <select name="material[]" class="material-select" style="width:70%;">
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="text" name="qty[]" class="form-control numeric">
-                                    </td>
-                                </tr>
+                                @if (isset($boms))
+                                    @foreach ($boms as $bom)
+                                        <tr>
+                                            <td>
+                                                <div class="form-check style-check d-flex align-items-center">
+                                                    <input class="form-check-input check-data" type="checkbox" disabled />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select name="material[]" class="material-select" style="width:70%;"
+                                                    disabled>
+                                                    <option value="{{ $bom->item_id }}" selected="selected">
+                                                        {{ $bom->item_name }}
+                                                    </option>
+                                                </select>
+                                                {{-- <input type="text" name="material[]" class="form-control numeric"
+                                                    value="{{ $bom->item_name }}" disabled> --}}
+                                            </td>
+                                            <td>
+                                                <input type="text" name="qty[]" class="form-control numeric"
+                                                    value="{{ $bom->qty }}" disabled>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td>
+                                            <div class="form-check style-check d-flex align-items-center">
+                                                <input class="form-check-input check-data" type="checkbox" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select name="material[]" class="material-select" style="width:70%;">
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="qty[]" class="form-control numeric">
+                                        </td>
+                                    </tr>
+                                @endif
+
                             </tbody>
                         </table>
-                        <button class="btn btn-danger rounded py-1 text-sm mt-3" id="delete-row">Delete
-                            Row</button>
-                        <button class="btn btn-dark rounded py-1 text-sm mt-3" id="add-row">Add
-                            Row</button>
+                        @if (!isset($item))
+                            <button class="btn btn-danger rounded py-1 text-sm mt-3 d-none" id="delete-row">Delete
+                                Row</button>
+                            <button class="btn btn-dark rounded py-1 text-sm mt-3" id="add-row">Add
+                                Row</button>
+                        @endif
                     </div>
                 </div>
             </form>
@@ -99,9 +132,11 @@
 
             $('form').submit(function(e) {
                 e.preventDefault()
+                const bom_items = get_bom_items();
                 var formData = new FormData(this);
                 formData.append("_token", "{{ csrf_token() }}");
                 formData.append("is_material", 0);
+                formData.append("bom_items", JSON.stringify(bom_items))
 
                 $.ajax({
                     type: "POST",
@@ -132,6 +167,10 @@
                 });
 
             });
+            $('#check-all').change(function(e) {
+                e.preventDefault();
+                checkAll($(this).is(':checked'));
+            });
 
             $('#add-row').click(function(e) {
                 e.preventDefault();
@@ -146,7 +185,7 @@
                     '</select>' +
                     '</td>' +
                     '<td>' +
-                    '<input type="text" name="name" class="form-control numeric">' +
+                    '<input type="text" name="qty[]" class="form-control numeric">' +
                     '</td>' +
                     '</tr>';
 
@@ -167,6 +206,13 @@
                         }
                     }
                 });
+
+                $('.check-data').prop('checked', false);
+                $('#check-all').prop('checked', false);
+            });
+
+            $('#bom').on('change', '.check-data', function() {
+                showHideButton()
             });
         });
 
@@ -184,6 +230,40 @@
                 },
                 placeholder: 'Pilih Material',
             });
+        }
+
+        function checkAll(checked) {
+            $('.check-data').prop('checked', checked);
+            showHideButton();
+        }
+
+        function showHideButton() {
+            const $delButton = $('#delete-row');
+
+            if ($('.check-data:checked').length > 0) {
+                $delButton.removeClass('d-none');
+            } else {
+                $delButton.addClass('d-none');
+                $checkAll.prop('checked', false);
+            }
+        }
+
+        function get_bom_items() {
+            let bom_items = [];
+
+            $('#bom tbody tr').each(function() {
+                let material = $(this).find('select[name="material[]"]').val();
+                let qty = $(this).find('input[name="qty[]"]').val();
+
+                if (material && qty) {
+                    bom_items.push({
+                        material: material,
+                        qty: qty
+                    });
+                }
+            });
+
+            return bom_items;
         }
     </script>
 @endpush

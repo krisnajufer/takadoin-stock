@@ -124,7 +124,7 @@
                 }
 
                 let rowData = table.row(this).data();
-                window.location.href = "/item/material/edit/" + rowData.id
+                window.location.href = "/item/material/edit/" + rowData.id.replaceAll("/", "-")
 
             });
 
