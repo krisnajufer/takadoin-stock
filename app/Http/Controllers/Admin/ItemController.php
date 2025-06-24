@@ -53,12 +53,12 @@ class ItemController extends Controller
             $item->is_material = $request->is_material;
             $item->save();
 
-            $item_stock = new ItemStock();
-            $item_stock->item_id = $item->id;
-            $item_stock->save();
-
             if ($request->is_material < 1) {
                 $this->store_bom($request, $item);
+            } else {
+                $item_stock = new ItemStock();
+                $item_stock->item_id = $item->id;
+                $item_stock->save();
             }
 
             DB::commit();
@@ -146,7 +146,7 @@ class ItemController extends Controller
     public function get_data(Request $request)
     {
         $query = Item::query()
-            ->join('item_stocks', 'items.id', '=', 'item_stocks.item_id')
+            ->leftjoin('item_stocks', 'items.id', '=', 'item_stocks.item_id')
             ->selectRaw('items.id AS id, items.name AS name,  items.is_material AS is_material, item_stocks.actual_qty AS qty');
 
         if ($request->filled('id')) {
@@ -168,17 +168,21 @@ class ItemController extends Controller
         $query = Item::query()
             ->join('item_stocks', 'items.id', '=', 'item_stocks.item_id')
             ->selectRaw('items.id AS id, items.name AS text')
-            ->where('items.is_material', $request->is_material)
-            ->where('item_stocks.actual_qty', '>', 0);
+            ->where([
+                ['items.is_material', '=', $request->is_material],
+                ['item_stocks.actual_qty', '>=', 0]
+            ]);
 
         if ($request->filled('search')) {
-            $query->where('items.id', 'like', "%{$request->search}%")
-                ->orWhere('items.name', 'like', "%{$request->search}%");
+            $query->where(function ($q) use ($request) {
+                $q->where('items.id', 'like', "%{$request->search}%")
+                    ->orWhere('items.name', 'like', "%{$request->search}%");
+            });
         }
 
         // Optional: Tambahkan limit untuk performa
         $results = $query->limit(10)->get();
-
+        // dd($results);
         return response()->json([
             'results' => $results
         ]);

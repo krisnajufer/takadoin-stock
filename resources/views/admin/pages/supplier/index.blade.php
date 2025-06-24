@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 
 @section('title')
-    Bouquet
+    Supplier
 @endsection
 
 @push('custom-style')
@@ -10,8 +10,8 @@
 
 @push('custom-button')
     <div class="d-flex gap-3">
-        <a href="{{ route('item.bouquet.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
-            Add Bouquet
+        <a href="{{ route('supplier.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
+            Add Supplier
         </a>
 
         <div class="dropdown d-none" id="action-button">
@@ -34,11 +34,11 @@
         <div class="card-header d-flex gap-3">
             <div>
                 <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
-                    placeholder="Kode Bouquet">
+                    placeholder="Kode Supplier">
             </div>
             <div>
-                <input type="text" name="search_item" id="search_item" class="form-control h-25 search-input"
-                    placeholder="Nama Bouquet">
+                <input type="text" name="search_name" id="search_name" class="form-control h-25 search-input"
+                    placeholder="Nama Supplier">
             </div>
         </div>
         <div class="card-body overflow-auto">
@@ -50,9 +50,10 @@
                                 <input class="form-check-input" type="checkbox" id="check-all" />
                             </div>
                         </th>
-                        <th>Kode Bouquet</th>
-                        <th>Nama Bouquet</th>
-                        {{-- <th>Stok</th> --}}
+                        <th>Kode Supplier</th>
+                        <th>Nama Supplier</th>
+                        <th>Alamat</th>
+                        <th>Kontak</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,11 +73,11 @@
                 bLengthChange: false,
                 bFilter: false,
                 ajax: {
-                    url: "{{ route('item.bouquet.get_data') }}",
+                    url: "{{ route('supplier.get_data') }}",
                     data: function(d) {
-                        d.name = $('#search_item').val();
+                        d.name = $('#search_name').val();
                         d.id = $('#search_id').val();
-                        d.is_material = 0;
+                        d.is_material = 1;
                     }
                 },
                 columns: [{
@@ -99,10 +100,14 @@
                         data: "name",
                         name: "name"
                     },
-                    // {
-                    //     data: "qty",
-                    //     name: "qty"
-                    // },
+                    {
+                        data: "address",
+                        name: "address"
+                    },
+                    {
+                        data: "phone",
+                        name: "phone"
+                    },
                 ],
                 columnDefs: [{
                     orderable: false,
@@ -124,7 +129,7 @@
                 }
 
                 let rowData = table.row(this).data();
-                window.location.href = "/item/bouquet/edit/" + rowData.id.replaceAll('/', '-')
+                window.location.href = "/supplier/edit/" + rowData.id.replaceAll("/", "-")
 
             });
 
@@ -137,7 +142,7 @@
                 });
                 $.ajax({
                     type: "POST",
-                    url: "/item/bouquet/destroy",
+                    url: "/supplier/destroy",
                     data: JSON.stringify({
                         data: values
                     }),

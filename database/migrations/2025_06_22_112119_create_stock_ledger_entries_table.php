@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('item_stocks', function (Blueprint $table) {
-            $table->id();
+        Schema::create('stock_ledger_entries', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('transaction_type');
+            $table->string('transaction_id');
             $table->string('item_id');
-            $table->integer('actual_qty')->default('0');
-            $table->integer('issue_qty')->default('0');
-            $table->integer('purchase_qty')->default('0');
+            $table->date('posting_date');
+            $table->integer('qty_change');
+            $table->integer('qty_after_transaction');
             $table->timestamps();
-
-            $table->foreign('item_id')->references('id')->on('items')->onDelete('restrict');
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('item_stocks');
+        Schema::dropIfExists('stock_ledger_entries');
     }
 };

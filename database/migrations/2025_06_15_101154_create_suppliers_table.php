@@ -12,16 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('suppliers', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
             $table->string('name');
             $table->text('address')->nullable();
             $table->string('phone')->nullable();
-            $table->string('created_by');
-            $table->string('updated_by')->nullable();
+            // $table->string('created_by');
+            // $table->string('updated_by')->nullable();
             $table->timestamps();
 
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
+            // $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
+            // $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
         });
     }
 

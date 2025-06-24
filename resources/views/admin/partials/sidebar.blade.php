@@ -52,6 +52,24 @@
                     <span>Bouquet</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('supplier.index') }}">
+                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                    <span>Supplier</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('purchase-order.index') }}">
+                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                    <span>Pemesanan</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('purchase-receipt.index') }}">
+                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                    <span>Penerimaan</span>
+                </a>
+            </li>
             {{-- <li>
                 <a href="chat-message.html">
                     <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>

@@ -1,18 +1,24 @@
 @extends('admin.layouts.app')
 
 @section('title')
-    Bouquet
+    Penerimaan
 @endsection
 
 @push('custom-style')
     <link rel="stylesheet" href="{{ asset('admin/custom/css/list.css') }}">
+    <style>
+        span.selection {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 @endpush
 
 @push('custom-button')
     <div class="d-flex gap-3">
-        <a href="{{ route('item.bouquet.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
-            Add Bouquet
-        </a>
+        {{-- <a href="{{ route('purchase-receipt.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
+            Add Pemesanan
+        </a> --}}
 
         <div class="dropdown d-none" id="action-button">
             <button class="btn btn-warning-600 not-active py-1 dropdown-toggle toggle-icon text-sm" type="button"
@@ -22,7 +28,7 @@
                         href="javascript:void(0)">Cancel</a></li> --}}
                 <li><button
                         class="dropdown-item px-16 py-8 rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900"
-                        id="delete-button">Delete</button>
+                        id="accept-button">Terima Pemesanan</button>
                 </li>
             </ul>
         </div>
@@ -34,11 +40,19 @@
         <div class="card-header d-flex gap-3">
             <div>
                 <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
-                    placeholder="Kode Bouquet">
+                    placeholder="Kode Pemesanan">
+            </div>
+            <div style="width:20rem;">
+                <select name="search_supplier" id="search_supplier" class="search-input" style="width:100%;">
+                </select>
             </div>
             <div>
-                <input type="text" name="search_item" id="search_item" class="form-control h-25 search-input"
-                    placeholder="Nama Bouquet">
+                <div class="position-relative d-none" id="wrap-date">
+                    <input class="form-control radius-8 bg-base datepicker" id="posting_date" name="posting_date"
+                        type="text" placeholder="Tanggal Penerimaan">
+                    <span class="position-absolute end-0 top-50 translate-middle-y me-12 line-height-1"><iconify-icon
+                            icon="solar:calendar-linear" class="icon text-lg"></iconify-icon></span>
+                </div>
             </div>
         </div>
         <div class="card-body overflow-auto">
@@ -50,9 +64,10 @@
                                 <input class="form-check-input" type="checkbox" id="check-all" />
                             </div>
                         </th>
-                        <th>Kode Bouquet</th>
-                        <th>Nama Bouquet</th>
-                        {{-- <th>Stok</th> --}}
+                        <th>Kode Pemesanan</th>
+                        <th>Supplier</th>
+                        <th>Tanggal Pemesanan</th>
+                        <th>Status Pemesanan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,17 +81,17 @@
     <script src="{{ asset('admin/custom/js/list.js') }}"></script>
     <script>
         $(document).ready(function() {
+
             let table = $('#dataTable').DataTable({
                 processing: true,
                 serverSide: true,
                 bLengthChange: false,
                 bFilter: false,
                 ajax: {
-                    url: "{{ route('item.bouquet.get_data') }}",
+                    url: "{{ route('purchase-receipt.get_data') }}",
                     data: function(d) {
-                        d.name = $('#search_item').val();
+                        d.supplier = $('#search_supplier').val();
                         d.id = $('#search_id').val();
-                        d.is_material = 0;
                     }
                 },
                 columns: [{
@@ -96,13 +111,21 @@
                         name: "id"
                     },
                     {
-                        data: "name",
-                        name: "name"
+                        data: "supplier_name",
+                        name: "supplier_name"
                     },
-                    // {
-                    //     data: "qty",
-                    //     name: "qty"
-                    // },
+                    {
+                        data: "posting_date",
+                        name: "posting_date"
+                    },
+                    {
+                        data: "status",
+                        render: function(data, type, row, meta) {
+                            let status = (data == 'Diterima') ? 'success' : 'secondary';
+                            let html = `<span class="badge text-bg-${status}">${data}</span>`;
+                            return html
+                        }
+                    },
                 ],
                 columnDefs: [{
                     orderable: false,
@@ -110,12 +133,13 @@
                 }]
             });
 
-            $('.search-input').on('keyup', function() {
+            $('.search-input').on('keyup change', function() {
                 table.draw();
             });
 
             table.on('change', '.check-data', function() {
                 showHideButton();
+                showHideDate();
             });
 
             $('#dataTable tbody').on('click', 'tr', function(e) {
@@ -124,11 +148,11 @@
                 }
 
                 let rowData = table.row(this).data();
-                window.location.href = "/item/bouquet/edit/" + rowData.id.replaceAll('/', '-')
+                window.location.href = "/purchase-receipt/edit/" + rowData.id.replaceAll("/", "-")
 
             });
 
-            $('#delete-button').click(function(e) {
+            $('#accept-button').click(function(e) {
                 e.preventDefault();
                 let values = [];
                 $('.check-data:checked').each(function(idx, el) {
@@ -137,9 +161,10 @@
                 });
                 $.ajax({
                     type: "POST",
-                    url: "/item/bouquet/destroy",
+                    url: "/purchase-receipt/received",
                     data: JSON.stringify({
-                        data: values
+                        data: values,
+                        posting_date: $('#posting_date').val()
                     }),
                     headers: {
                         'X-CSRF-TOKEN': "{{ csrf_token() }}"
@@ -159,6 +184,8 @@
                         timerProgressBar: true
                     }).then(() => {
                         table.draw()
+                        showHideButton();
+                        showHideDate();
                     });
                 }).fail(function(resp) {
                     Swal.fire({
@@ -169,6 +196,39 @@
                     });
                 });
             });
+
+            $('#search_supplier').select2({
+                width: '100%',
+                ajax: {
+                    url: "{{ route('supplier.get_data_select') }}",
+                    data: function(params) {
+                        return {
+                            search: params.term,
+                        };
+                    }
+                },
+                placeholder: 'Pilih Supplier',
+            });
+
+            getDatePicker('.datepicker')
         });
+
+        function getDatePicker(receiveID) {
+            flatpickr(receiveID, {
+                enableTime: false,
+                dateFormat: "d/m/Y",
+            });
+        }
+
+        function showHideDate() {
+            const $dateWrap = $('#wrap-date');
+
+            if ($('.check-data:checked').length > 0) {
+                $dateWrap.removeClass('d-none');
+            } else {
+                $dateWrap.addClass('d-none');
+                $checkAll.prop('checked', false);
+            }
+        }
     </script>
 @endpush

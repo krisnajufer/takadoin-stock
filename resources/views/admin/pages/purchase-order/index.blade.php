@@ -1,17 +1,23 @@
 @extends('admin.layouts.app')
 
 @section('title')
-    Bouquet
+    Pemesanan
 @endsection
 
 @push('custom-style')
     <link rel="stylesheet" href="{{ asset('admin/custom/css/list.css') }}">
+    <style>
+        span.selection {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 @endpush
 
 @push('custom-button')
     <div class="d-flex gap-3">
-        <a href="{{ route('item.bouquet.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
-            Add Bouquet
+        <a href="{{ route('purchase-order.create') }}" class="btn btn-primary rounded py-1 text-sm" id="new-button">
+            Add Pemesanan
         </a>
 
         <div class="dropdown d-none" id="action-button">
@@ -34,11 +40,11 @@
         <div class="card-header d-flex gap-3">
             <div>
                 <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
-                    placeholder="Kode Bouquet">
+                    placeholder="Kode Pemesanan">
             </div>
-            <div>
-                <input type="text" name="search_item" id="search_item" class="form-control h-25 search-input"
-                    placeholder="Nama Bouquet">
+            <div style="width:20rem;">
+                <select name="search_supplier" id="search_supplier" class="search-input" style="width:100%;">
+                </select>
             </div>
         </div>
         <div class="card-body overflow-auto">
@@ -50,9 +56,10 @@
                                 <input class="form-check-input" type="checkbox" id="check-all" />
                             </div>
                         </th>
-                        <th>Kode Bouquet</th>
-                        <th>Nama Bouquet</th>
-                        {{-- <th>Stok</th> --}}
+                        <th>Kode Pemesanan</th>
+                        <th>Supplier</th>
+                        <th>Tanggal Pemesanan</th>
+                        <th>Status Pemesanan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,11 +79,10 @@
                 bLengthChange: false,
                 bFilter: false,
                 ajax: {
-                    url: "{{ route('item.bouquet.get_data') }}",
+                    url: "{{ route('purchase-order.get_data') }}",
                     data: function(d) {
-                        d.name = $('#search_item').val();
+                        d.supplier = $('#search_supplier').val();
                         d.id = $('#search_id').val();
-                        d.is_material = 0;
                     }
                 },
                 columns: [{
@@ -96,13 +102,21 @@
                         name: "id"
                     },
                     {
-                        data: "name",
-                        name: "name"
+                        data: "supplier_name",
+                        name: "supplier_name"
                     },
-                    // {
-                    //     data: "qty",
-                    //     name: "qty"
-                    // },
+                    {
+                        data: "posting_date",
+                        name: "posting_date"
+                    },
+                    {
+                        data: "status",
+                        render: function(data, type, row, meta) {
+                            let status = (data == 'Diterima') ? 'success' : 'secondary';
+                            let html = `<span class="badge text-bg-${status}">${data}</span>`;
+                            return html
+                        }
+                    },
                 ],
                 columnDefs: [{
                     orderable: false,
@@ -110,7 +124,7 @@
                 }]
             });
 
-            $('.search-input').on('keyup', function() {
+            $('.search-input').on('keyup change', function() {
                 table.draw();
             });
 
@@ -124,7 +138,7 @@
                 }
 
                 let rowData = table.row(this).data();
-                window.location.href = "/item/bouquet/edit/" + rowData.id.replaceAll('/', '-')
+                window.location.href = "/purchase-order/edit/" + rowData.id.replaceAll("/", "-")
 
             });
 
@@ -137,7 +151,7 @@
                 });
                 $.ajax({
                     type: "POST",
-                    url: "/item/bouquet/destroy",
+                    url: "/purchase-order/destroy",
                     data: JSON.stringify({
                         data: values
                     }),
@@ -168,6 +182,19 @@
                         timer: 3000
                     });
                 });
+            });
+
+            $('#search_supplier').select2({
+                width: '100%',
+                ajax: {
+                    url: "{{ route('supplier.get_data_select') }}",
+                    data: function(params) {
+                        return {
+                            search: params.term,
+                        };
+                    }
+                },
+                placeholder: 'Pilih Supplier',
             });
         });
     </script>

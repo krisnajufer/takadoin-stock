@@ -11,7 +11,7 @@
 {{-- <link rel="stylesheet" href="assets/css/lib/editor.atom-one-dark.min.css"> --}}
 {{-- <link rel="stylesheet" href="assets/css/lib/editor.quill.snow.css"> --}}
 <!-- Date picker css -->
-{{-- <link rel="stylesheet" href="assets/css/lib/flatpickr.min.css"> --}}
+<link rel="stylesheet" href="{{ asset('admin/assets/css/lib/flatpickr.min.css') }}">
 <!-- Calendar css -->
 {{-- <link rel="stylesheet" href="assets/css/lib/full-calendar.css"> --}}
 <!-- Vector Map css -->
@@ -22,7 +22,7 @@
 {{-- <link rel="stylesheet" href="assets/css/lib/slick.css"> --}}
 <!-- main css -->
 <link rel="stylesheet" href="{{ asset('admin/assets/css/style.css') }}">
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.4.0/dist/select2-bootstrap-5-theme.min.css"
-    rel="stylesheet" />
+{{-- <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.4.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" /> --}}
 
 <link rel="stylesheet" href="{{ asset('admin/custom/css/select2.min.css') }}">

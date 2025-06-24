@@ -37,7 +37,7 @@
                     placeholder="Kode Material">
             </div>
             <div>
-                <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
+                <input type="text" name="search_item" id="search_item" class="form-control h-25 search-input"
                     placeholder="Nama Material">
             </div>
         </div>
