@@ -70,6 +70,12 @@
                     <span>Penerimaan</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('manufacture.index') }}">
+                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                    <span>Pembentukan Buket</span>
+                </a>
+            </li>
             {{-- <li>
                 <a href="chat-message.html">
                     <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>

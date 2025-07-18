@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bom;
 use App\Models\Manufacture;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -31,5 +32,17 @@ class ManufactureController extends Controller
 
 
         return DataTables::of($query)->toJson();
+    }
+
+    public function get_data_bom(Request $request)
+    {
+        $query = Bom::query()
+            ->selectRaw('items.name as material, item_stocks.actual_qty as current_qty, bom_materials.qty * ' . $request->qty . ' AS needed_qty')
+            ->join('bom_materials', 'boms.id', '=', 'bom_materials.bom_id')
+            ->join('items', 'bom_materials.item_id', '=', 'items.id')
+            ->join('item_stocks', 'items.id', '=', 'item_stocks.item_id')
+            ->where('boms.item_id', $request->bouquet)->get();
+
+        return $query;
     }
 }

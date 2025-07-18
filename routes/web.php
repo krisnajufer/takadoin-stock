@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ManufactureController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
@@ -82,5 +83,9 @@ Route::controller(ManufactureController::class)->prefix('/manufacture')->name('m
     Route::get('/edit/{id}', 'edit')->name('edit');
     Route::post('/update', 'update')->name('update');
     Route::post('/destroy', 'destroy')->name('destroy');
-    Route::post('/received', 'received')->name('received');
+    Route::get('/get_data_bom', 'get_data_bom')->name('get_data_bom');
+});
+
+Route::controller(DashboardController::class)->prefix('/')->name('dashboard.')->group(function () {
+    Route::get('/', 'index')->name('index');
 });

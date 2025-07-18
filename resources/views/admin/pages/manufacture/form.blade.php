@@ -44,8 +44,9 @@
                         <table class="table bordered-table mb-0 table-hover" id="mnf_items">
                             <colgroup>
                                 <col style="width: 0.5rem;">
+                                <col style="width: 20rem;">
                                 <col style="width: 10rem;">
-                                <col style="width: 2rem;">
+                                <col style="width: 0.5rem;">
                             </colgroup>
                             <thead>
                                 <tr>
@@ -57,6 +58,7 @@
                                     </th>
                                     <th>Bouquet</th>
                                     <th>Qty</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -79,6 +81,10 @@
                                                 <input type="text" name="qty[]" class="form-control numeric"
                                                     value="{{ $poi->qty }}" disabled>
                                             </td>
+                                            <td>
+                                                <button class="btn btn-warning rounded py-1 text-sm detail"
+                                                    type="button">Calculate</button>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 @else
@@ -95,6 +101,10 @@
                                         <td>
                                             <input type="text" name="qty[]" class="form-control numeric qty">
                                         </td>
+                                        <td>
+                                            <button class="btn btn-warning rounded py-1 text-sm detail"
+                                                type="button">Calculate</button>
+                                        </td>
                                     </tr>
                                 @endif
 
@@ -106,6 +116,21 @@
                             <button class="btn btn-dark rounded py-1 text-sm mt-3" id="add-row">Add
                                 Row</button>
                         @endif
+                    </div>
+                    <div class="col-12 mt-5" id="wrap-bom">
+                        <label class="form-label" for="mnf_items">BOM Bouquets</label>
+                        <table class="table bordered-table mb-0 table-hover" id="bom-table">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Qty saat ini</th>
+                                    <th>Qty dibutuhkan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </form>
@@ -179,6 +204,27 @@
                 checkAll($(this).is(':checked'));
             });
 
+            $('#mnf_items tbody').on('click', '.detail', function(e) {
+                let row = $(this).closest('tr');
+
+                let bouquet = row.find('.bouquet-select').val();
+
+                let qty = row.find('.qty').val() || row.find('input[name="qty[]"]')
+                    .val()
+
+                if (bouquet == null || qty == '' || qty < 1) {
+                    return
+                }
+
+                let data = {
+                    bouquet: bouquet,
+                    qty: qty
+                };
+
+                getDataBom(data);
+
+            });
+
             $('#add-row').click(function(e) {
                 e.preventDefault();
                 let rowHtml = '<tr>' +
@@ -195,10 +241,7 @@
                     '<input type="text" name="qty[]" class="form-control numeric qty">' +
                     '</td>' +
                     '<td>' +
-                    '<input type="text" name="price[]" class="form-control numeric price">' +
-                    '</td>' +
-                    '<td>' +
-                    '<input type="text" name="amount[]" class="form-control numeric" readonly>' +
+                    '<button class="btn btn-warning rounded py-1 text-sm detail" type="button">Calculate</button>' +
                     '</td>' +
                     '</tr>';
 
@@ -226,19 +269,6 @@
 
             $('#mnf_items').on('change', '.check-data', function() {
                 showHideButton()
-            });
-
-            $('#supplier_id').select2({
-                width: '100%',
-                ajax: {
-                    url: "{{ route('supplier.get_data_select') }}",
-                    data: function(params) {
-                        return {
-                            search: params.term,
-                        };
-                    }
-                },
-                placeholder: 'Pilih Supplier',
             });
         });
 
@@ -272,6 +302,33 @@
                 $delButton.addClass('d-none');
                 $checkAll.prop('checked', false);
             }
+        }
+
+        function getDataBom(data) {
+            $.ajax({
+                type: "GET",
+                url: "/manufacture/get_data_bom",
+                data: data,
+                dataType: "JSON",
+            }).done(function(res) {
+                const tbody = $('#bom-table tbody');
+                tbody.empty(); // hapus semua isi tbody
+                res.forEach(row => {
+                    appendRow(tbody, row)
+                });
+            }).fail(function(res) {});
+        }
+
+        function appendRow(tbody, row) {
+            let html = `
+                    <tr>
+                        <td>${row.material}</td>
+                        <td>${row.current_qty}</td>
+                        <td>${row.needed_qty}</td>
+                    </tr>
+                `;
+
+            tbody.append(html);
         }
 
         function get_mnf_items() {

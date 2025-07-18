@@ -165,13 +165,14 @@ class ItemController extends Controller
 
     public function get_data_select(Request $request)
     {
+        $cond = [ ['items.is_material', '=', $request->is_material]];
+        if ($request->is_material > 0) {
+            array_push($cond, ['item_stocks.actual_qty', '>=', 0]);
+        }
         $query = Item::query()
-            ->join('item_stocks', 'items.id', '=', 'item_stocks.item_id')
+            ->leftjoin('item_stocks', 'items.id', '=', 'item_stocks.item_id')
             ->selectRaw('items.id AS id, items.name AS text')
-            ->where([
-                ['items.is_material', '=', $request->is_material],
-                ['item_stocks.actual_qty', '>=', 0]
-            ]);
+            ->where($cond);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -182,7 +183,7 @@ class ItemController extends Controller
 
         // Optional: Tambahkan limit untuk performa
         $results = $query->limit(10)->get();
-        // dd($results);
+        // dd($query->toSql());
         return response()->json([
             'results' => $results
         ]);
