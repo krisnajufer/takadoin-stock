@@ -44,7 +44,7 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label">Kontak</label>
-                        <input type="text" name="phone" class="form-control numeric" placeholder="Masukkan Alamat"
+                        <input type="text" name="phone" class="form-control numeric" placeholder="Masukkan Nomor"
                             value="{{ isset($supplier) ? $supplier->phone : '' }}">
                     </div>
                     {{-- <div class="col-12">
