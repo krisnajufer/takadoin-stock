@@ -32,7 +32,7 @@
                         <label class="form-label" id="posting_date">Tanggal Pemesanan</label>
                         <div class=" position-relative">
                             <input class="form-control radius-8 bg-base datepicker" id="posting_date" name="posting_date"
-                                type="text" placeholder="03/12/2024" value="{{ isset($po) ? $po->posting_date : '' }}"
+                                type="text" value="{{ isset($po) ? $po->posting_date : '' }}"
                                 {{ isset($po) ? 'disabled' : '' }}>
                             <span
                                 class="position-absolute end-0 top-50 translate-middle-y me-12 line-height-1"><iconify-icon
