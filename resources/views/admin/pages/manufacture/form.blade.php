@@ -32,7 +32,7 @@
                         <label class="form-label" id="posting_date">Tanggal Pembentukan</label>
                         <div class=" position-relative">
                             <input class="form-control radius-8 bg-base datepicker" id="posting_date" name="posting_date"
-                                type="text" placeholder="03/12/2024" value="{{ isset($po) ? $po->posting_date : '' }}"
+                                type="text" value="{{ isset($po) ? $po->posting_date : '' }}"
                                 {{ isset($po) ? 'disabled' : '' }}>
                             <span
                                 class="position-absolute end-0 top-50 translate-middle-y me-12 line-height-1"><iconify-icon
@@ -118,13 +118,14 @@
                         @endif
                     </div>
                     <div class="col-12 mt-5" id="wrap-bom">
-                        <label class="form-label" for="mnf_items">BOM Bouquets</label>
+                        <label class="form-label" for="mnf_items">BOM for <span id="label-manufacture"></span></label>
                         <table class="table bordered-table mb-0 table-hover" id="bom-table">
                             <thead>
                                 <tr>
                                     <th>Material</th>
                                     <th>Qty saat ini</th>
                                     <th>Qty dibutuhkan</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -161,18 +162,14 @@
 
             $('form').submit(function(e) {
                 e.preventDefault()
-                let {
-                    mnf_items,
-                    total
-                } = get_mnf_items();
+                let mnf_items = get_mnf_items();
                 var formData = new FormData(this);
                 formData.append("_token", "{{ csrf_token() }}");
                 formData.append("mnf_items", JSON.stringify(mnf_items))
-                formData.append("grand_total", total)
 
                 $.ajax({
                     type: "POST",
-                    url: "/purchase-order/" + $(this).data("id"),
+                    url: "/manufacture/" + $(this).data("id"),
                     data: formData,
                     dataType: "json",
                     processData: false,
@@ -187,7 +184,7 @@
                         showConfirmButton: false, // agar tidak ada tombol OK
                         timerProgressBar: true
                     }).then(() => {
-                        window.location.href = "/purchase-order";
+                        window.location.href = "/manufacture";
                     });
                 }).fail(function(resp) {
                     Swal.fire({
@@ -208,7 +205,8 @@
                 let row = $(this).closest('tr');
 
                 let bouquet = row.find('.bouquet-select').val();
-
+                let bouquetName = row.find('.bouquet-select').select2('data')[0].text;
+                
                 let qty = row.find('.qty').val() || row.find('input[name="qty[]"]')
                     .val()
 
@@ -221,7 +219,7 @@
                     qty: qty
                 };
 
-                getDataBom(data);
+                getDataBom(data, bouquetName);
 
             });
 
@@ -304,7 +302,7 @@
             }
         }
 
-        function getDataBom(data) {
+        function getDataBom(data, bouquetName) {
             $.ajax({
                 type: "GET",
                 url: "/manufacture/get_data_bom",
@@ -316,15 +314,23 @@
                 res.forEach(row => {
                     appendRow(tbody, row)
                 });
+
+                $('#label-manufacture').text(bouquetName);
             }).fail(function(res) {});
         }
 
         function appendRow(tbody, row) {
+            let row_status = {'color': 'danger', 'status': 'Tidak Mencukupi'}
+            if (row.current_qty > row.needed_qty) {
+                row_status['color'] = 'success';
+                row_status['status'] = 'Mencukupi';
+            }
             let html = `
                     <tr>
                         <td>${row.material}</td>
                         <td>${row.current_qty}</td>
                         <td>${row.needed_qty}</td>
+                        <td><span class="badge bg-${row_status.color}">${row_status.status}</span></td>
                     </tr>
                 `;
 
@@ -333,7 +339,6 @@
 
         function get_mnf_items() {
             let mnf_items = [];
-            let total = 0;
             $('#mnf_items tbody tr').each(function() {
                 let bouquet = $(this).find('select[name="bouquet[]"]').val();
                 let qty = $(this).find('input[name="qty[]"]').val();
@@ -342,16 +347,11 @@
                     mnf_items.push({
                         bouquet: bouquet,
                         qty: qty,
-                        price: price,
-                        amount: amount,
                     });
                 }
             });
 
-            return {
-                mnf_items,
-                total
-            };
+            return mnf_items;
         }
 
         function getDatePicker(receiveID) {
