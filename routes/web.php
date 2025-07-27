@@ -4,9 +4,11 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ManufactureController;
+use App\Http\Controllers\Admin\MaterialIssueController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\PurchaseReceiptController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Models\MaterialIssue;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -84,6 +86,16 @@ Route::controller(ManufactureController::class)->prefix('/manufacture')->name('m
     Route::post('/update', 'update')->name('update');
     Route::post('/destroy', 'destroy')->name('destroy');
     Route::get('/get_data_bom', 'get_data_bom')->name('get_data_bom');
+});
+
+Route::controller(MaterialIssueController::class)->prefix('/material-issue')->name('material-issue.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/get_data', 'get_data')->name('get_data');
+    Route::get('/create', 'create')->name('create');
+    Route::post('/store', 'store')->name('store');
+    Route::get('/edit/{id}', 'edit')->name('edit');
+    Route::post('/update', 'update')->name('update');
+    Route::post('/destroy', 'destroy')->name('destroy');
 });
 
 Route::controller(DashboardController::class)->prefix('/')->name('dashboard.')->group(function () {

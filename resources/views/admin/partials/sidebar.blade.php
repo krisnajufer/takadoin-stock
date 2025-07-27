@@ -76,6 +76,12 @@
                     <span>Pembentukan Buket</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('material-issue.index') }}">
+                    <iconify-icon icon="mage:email" class="menu-icon"></iconify-icon>
+                    <span>Material Issue</span>
+                </a>
+            </li>
             {{-- <li>
                 <a href="chat-message.html">
                     <iconify-icon icon="bi:chat-dots" class="menu-icon"></iconify-icon>
