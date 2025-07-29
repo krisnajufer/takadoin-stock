@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('grand_total');
             $table->string('status');
             $table->date('received_at')->nullable();
+            $table->time('received_time')->nullable();
             $table->timestamps();
 
             $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('restrict');

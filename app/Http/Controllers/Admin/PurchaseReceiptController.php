@@ -56,9 +56,10 @@ class PurchaseReceiptController extends Controller
         DB::beginTransaction();
         try {
             $ids = $request->json()->all();
-            $posting_date = Carbon::createFromFormat('d/m/Y', $ids['posting_date'])->format('Y-m-d');
-            PurchaseOrder::whereIn('id', $ids['data'])->update(['status' => 'Diterima', 'received_at' => $posting_date]);
-            $this->make_sle($ids['data'], $posting_date);
+            $posting_date = Carbon::createFromFormat('d/m/Y H:i', $ids['posting_date'])->format('Y-m-d');
+            $posting_time = Carbon::createFromFormat('d/m/Y H:i', $ids['posting_date'])->format('H:i');
+            PurchaseOrder::whereIn('id', $ids['data'])->update(['status' => 'Diterima', 'received_at' => $posting_date, 'received_time' => $posting_time]);
+            $this->make_sle($ids['data'], $posting_date, $posting_time);
             DB::commit();
             return response()->json("success received data", 200);
         } catch (\Exception $ex) {
@@ -67,7 +68,7 @@ class PurchaseReceiptController extends Controller
         }
     }
 
-    function make_sle($data_id, $posting_date)
+    function make_sle($data_id, $posting_date, $posting_time)
     {
         foreach ($data_id as $key => $val) {
             $po_items = PurchaseOrderItem::where('purchase_order_id', $val)->get();
@@ -79,11 +80,12 @@ class PurchaseReceiptController extends Controller
                 $sle->transaction_id = $val;
                 $sle->item_id = $detail->item_id;
                 $sle->posting_date = $posting_date;
+                $sle->posting_time = $posting_time;
                 $sle->qty_change = $detail->qty;
                 $sle->qty_after_transaction = $item->actual_qty + $detail->qty;
                 $sle->save();
 
-                $actual_qty = $this->calculate_qty($detail->item_id)->actual_qty;
+                $actual_qty = $this->actual_qty($detail->item_id);
 
                 $item_stock = ItemStock::where('item_id', $detail->item_id)->first();
                 ItemStock::where('item_id', $detail->item_id)->update(['purchase_qty' => $item_stock->purchase_qty - $detail->qty, 'actual_qty' => $actual_qty]);
@@ -91,12 +93,12 @@ class PurchaseReceiptController extends Controller
         }
     }
 
-    function calculate_qty($item_id)
+    function actual_qty($item_id)
     {
-        $result = StockLedgerEntry::selectRaw('item_id, SUM(qty_change) AS actual_qty')
-            ->where('item_id', $item_id)
-            ->groupBy('item_id')->first();
-
+        $result = StockLedgerEntry::where('item_id', $item_id)
+            ->orderBy('posting_date', 'asc')
+            ->orderBy('posting_time', 'asc')
+            ->sum('qty_change');
         return $result;
     }
 }

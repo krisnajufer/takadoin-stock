@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('material_issues', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->date('posting_date');
+            $table->time('posting_time');
             $table->string('issue_type');
             $table->timestamps();
         });

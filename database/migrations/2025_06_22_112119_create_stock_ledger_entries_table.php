@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('transaction_id');
             $table->string('item_id');
             $table->date('posting_date');
+            $table->time('posting_time');
             $table->integer('qty_change');
             $table->integer('qty_after_transaction');
             $table->timestamps();

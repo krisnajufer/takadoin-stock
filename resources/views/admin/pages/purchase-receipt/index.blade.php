@@ -215,8 +215,9 @@
 
         function getDatePicker(receiveID) {
             flatpickr(receiveID, {
-                enableTime: false,
-                dateFormat: "d/m/Y",
+                enableTime: true,
+                time_24hr: true,
+                dateFormat: "d/m/Y H:i",
             });
         }
 

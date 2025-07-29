@@ -57,7 +57,8 @@ class ManufactureController extends Controller
         try {
             $mnf = new Manufacture();
             $mnf->id = Manufacture::get_new_code($request->is_material);
-            $mnf->posting_date = Carbon::createFromFormat('d/m/Y', $request->posting_date)->format('Y-m-d');
+            $mnf->posting_date = Carbon::createFromFormat('d/m/Y H:i', $request->posting_date)->format('Y-m-d');
+            $mnf->posting_time = Carbon::createFromFormat('d/m/Y H:i', $request->posting_date)->format('H:i');
             $mnf->save();
 
             $check = $this->store_items($request, $mnf);
@@ -116,6 +117,7 @@ class ManufactureController extends Controller
         $sle->transaction_id = $mnf->id;
         $sle->item_id = $data_bom->id;
         $sle->posting_date = $mnf->posting_date;
+        $sle->posting_time = $mnf->posting_time;
         $sle->qty_change = $data_bom->needed_qty *-1;
         $sle->qty_after_transaction = $item->actual_qty - $data_bom->needed_qty;
         $sle->save();
@@ -124,17 +126,31 @@ class ManufactureController extends Controller
         ItemStock::where('item_id', $data_bom->id)->update(['actual_qty' => $actual_qty]);
     }
 
-    function calculate_before_posting_date($item_id, $posting_date)
+    function calculate_before_posting_date($item_id, $posting_date, $posting_time)
     {
         $result = StockLedgerEntry::where('item_id', $item_id)
-            ->where('posting_date', '<', $posting_date)
-            ->sum('qty_change');
+                    ->where(function($query) use ($posting_date, $posting_time) {
+                        $query->where('posting_date', '<', $posting_date)
+                            ->orWhere(function($q) use ($posting_date, $posting_time) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', '<', $posting_time);
+                            });
+                    })
+                    ->sum('qty_change');
+        // dd($result);
         return $result;
     }
-    function calculate_after_posting_date($item_id)
+    function calculate_after_posting_date($item_id, $posting_date, $posting_time)
     {
         $result = StockLedgerEntry::where('item_id', $item_id)
-            ->sum('qty_change');
+                    ->where(function($query) use ($posting_date, $posting_time) {
+                        $query->where('posting_date', '>', $posting_date)
+                            ->orWhere(function($q) use ($posting_date, $posting_time) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', '>', $posting_time);
+                            });
+                    })
+                    ->sum('qty_change');
         return $result;
     }
 
@@ -142,19 +158,23 @@ class ManufactureController extends Controller
     {
         $result = StockLedgerEntry::where('item_id', $item_id)
             ->orderBy('posting_date', 'asc')
+            ->orderBy('posting_time', 'asc')
             ->sum('qty_change');
-        // dd($result);
         return $result;
     }
 
     function validate_material($mnf, $bom){
-        $actual_qty_before = $this->calculate_before_posting_date($bom->id, $mnf->posting_date);
-        $actual_qty_after = $this->calculate_after_posting_date($bom->id);
+        $actual_qty_before = $this->calculate_before_posting_date($bom->id, $mnf->posting_date, $mnf->posting_time);
+        $actual_qty_after = $this->calculate_after_posting_date($bom->id, $mnf->posting_date, $mnf->posting_time);
+
+        // dd($actual_qty_after, $actual_qty_before);
         if ($actual_qty_before < $bom->needed_qty) {
             return "<li>Stok Material <b>".$bom->material."</b> di tanggal <b>".$mnf->posting_date."</b> hanya ".$actual_qty_before.", stok yang dibutuhkan ".$bom->needed_qty."</li>";
         }
-        if ($actual_qty_after - $bom->needed_qty < 0) {
-            return "<li>Stok Material <b>".$bom->material."</b> di tanggal <b>".$mnf->posting_date."</b> hanya ".$actual_qty_after.", stok yang dibutuhkan ".$bom->needed_qty." dan menjadi negatif yaitu ".($actual_qty_after - $bom->needed_qty)."</li>";
+
+        $after_calculate_qty = $actual_qty_before - $bom->needed_qty + $actual_qty_after;
+        if ($after_calculate_qty < 0) {
+            return "<li>Stok Material <b>".$bom->material."</b> di tanggal <b>".$mnf->posting_date."</b> hanya ".$bom->current_qty.", stok yang dibutuhkan ".$bom->needed_qty." dan menjadi negatif yaitu ".$after_calculate_qty."</li>";
         }
     }
 }
