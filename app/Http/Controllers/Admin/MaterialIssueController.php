@@ -47,11 +47,14 @@ class MaterialIssueController extends Controller
             $mtr_issue = new MaterialIssue();
             $mtr_issue->id = MaterialIssue::get_new_code($request->is_material);
             $mtr_issue->posting_date = Carbon::createFromFormat('d/m/Y', $request->posting_date)->format('Y-m-d');
+            $mtr_issue->posting_time = Carbon::createFromFormat('d/m/Y', $request->posting_date)->format('H:i');
             $mtr_issue->issue_type = $request->issue_type;
             $mtr_issue->save();
 
-            $this->store_items($request, $mtr_issue);
-
+            $check = $this->store_items($request, $mtr_issue);
+            if ($check) {
+                return response()->json($check, 200);
+            }
             DB::commit();
             return response()->json("success add new data item", 200);
         } catch (\Exception $ex) {
@@ -62,6 +65,17 @@ class MaterialIssueController extends Controller
 
     function store_items($request, $mtr_issue)
     {
+        $throw = [];
+        foreach (json_decode($request->issue_items) as $key => $value) {
+            $result = $this->validate_material($mtr_issue, $value);
+            if ($result) {
+                array_push($throw, $result);
+            }
+        }
+
+        if ($throw) {
+            return $throw;
+        }
         foreach (json_decode($request->issue_items) as $key => $value) {
             $issue_item = new MaterialIssueItem();
             $issue_item->material_issue_id = $mtr_issue->id;
@@ -77,27 +91,115 @@ class MaterialIssueController extends Controller
 
     function make_sle($mtr_issue, $issue_item)
     {
-        $item = ItemStock::where('item_id', $issue_item->item_id)->first();
+        $actual_qty_before = $this->calculate_before_posting_date($issue_item->item_id, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
         $sle = new StockLedgerEntry();
         $sle->id = StockLedgerEntry::get_new_code();
         $sle->transaction_type = 'Material Issue';
         $sle->transaction_id = $mtr_issue->id;
         $sle->item_id = $issue_item->item_id;
         $sle->posting_date = $mtr_issue->posting_date;
+        $sle->posting_time = $mtr_issue->posting_time;
         $sle->qty_change = $issue_item->qty *-1;
-        $sle->qty_after_transaction = $item->actual_qty - $issue_item->qty;
+        $sle->qty_after_transaction = $actual_qty_before - $issue_item->qty;
         $sle->save();
 
-        $actual_qty = $this->calculate_qty($issue_item->item_id)->actual_qty;
+        $actual_qty = $this->actual_qty($issue_item->item_id);
+        $item = ItemStock::where('item_id', $issue_item->item_id)->first();
         ItemStock::where('item_id', $issue_item->item_id)->update(['actual_qty' => $actual_qty, 'issue_qty' => $item->issue_qty + $issue_item->qty]);
+        $this->calculate_future_sle($sle);
     }
 
-    function calculate_qty($item_id)
+    function actual_qty($item_id)
     {
-        $result = StockLedgerEntry::selectRaw('item_id, COALESCE(SUM(qty_change), 0) AS actual_qty')
-            ->where('item_id', $item_id)
-            ->groupBy('item_id')->first();
-
+        $result = StockLedgerEntry::where('item_id', $item_id)
+            ->orderBy('posting_date', 'asc')
+            ->orderBy('posting_time', 'asc')
+            ->sum('qty_change');
         return $result;
+    }
+
+    function calculate_before_posting_date($item_id, $posting_date, $posting_time, $created_at)
+    {
+        $result = StockLedgerEntry::where('item_id', $item_id)
+                    ->where(function($query) use ($posting_date, $posting_time, $created_at) {
+                        $query->where('posting_date', '<', $posting_date)
+                            ->orWhere(function($q) use ($posting_date, $posting_time) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', '<', $posting_time);
+                            })
+                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', $posting_time)
+                                    ->where('created_at', '<', $created_at);
+                            });
+                    })
+                    ->sum('qty_change');
+        // dd($result);
+        return $result;
+    }
+    function calculate_after_posting_date($item_id, $posting_date, $posting_time, $created_at)
+    {
+        $result = StockLedgerEntry::where('item_id', $item_id)
+                    ->where(function($query) use ($posting_date, $posting_time, $created_at) {
+                        $query->where('posting_date', '>', $posting_date)
+                            ->orWhere(function($q) use ($posting_date, $posting_time) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', '>', $posting_time);
+                            })
+                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', $posting_time)
+                                    ->where('created_at', '>', $created_at);
+                            });
+                    })
+                    ->sum('qty_change');
+        return $result;
+    }
+
+    function calculate_future_sle($sle){
+        $posting_date = $sle->posting_date;
+        $posting_time = $sle->posting_time;
+        $created_at = $sle->created_at;
+        $qty_after_transaction = $sle->qty_after_transaction;
+        $result = StockLedgerEntry::where('item_id', $sle->item_id)
+                    ->where(function($query) use ($posting_date, $posting_time, $created_at) {
+                        $query->where('posting_date', '>', $posting_date)
+                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', '>', $posting_time);
+                            })
+                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', $posting_time)
+                                    ->where('created_at', '>', $created_at);
+                            });
+                    })
+                    ->orderBy('posting_date', 'ASC')
+                    ->orderBy('posting_time', 'ASC')
+                    ->orderBy('created_at', 'ASC')
+                    ->get();
+        
+        foreach ($result as $key => $val) {
+            $qty_after_transaction += $val->qty_change;
+            StockLedgerEntry::where('id', $val->id)->update(['qty_after_transaction' => $qty_after_transaction]);
+        }
+    }
+
+    function validate_material($mtr_issue, $issue_item){
+        $actual_qty_before = $this->calculate_before_posting_date($issue_item->item_id, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
+        $actual_qty_after = $this->calculate_after_posting_date($issue_item->item_id, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
+
+        // dd($actual_qty_after, $actual_qty_before);
+        if ($actual_qty_before < $issue_item->needed_qty) {
+            // return "<li>Stok Material <b>".$issue_item->material."</b> di tanggal <b>".$mtr_issue->posting_date."</b> hanya ".$actual_qty_before.", stok yang dibutuhkan ".$issue_item->needed_qty."</li>";
+            return "<li>Stok material <b>{$issue_item->material}</b> pada tanggal <b>{$mtr_issue->posting_date}</b> hanya tersedia <b>{$actual_qty_before}</b>, sedangkan jumlah yang dibutuhkan adalah <b>{$issue_item->needed_qty}</b>. Harap lakukan penyesuaian stok terlebih dahulu.</li>";
+
+        }
+
+        $after_calculate_qty = $actual_qty_before - $issue_item->needed_qty + $actual_qty_after;
+        if ($after_calculate_qty < 0) {
+            // return "<li>Stok Material <b>".$issue_item->material."</b> di tanggal <b>".$mtr_issue->posting_date."</b> hanya ".$issue_item->current_qty.", stok yang dibutuhkan ".$issue_item->needed_qty." dan menjadi negatif yaitu ".$after_calculate_qty."</li>";
+            return "<li>Stok material <b>{$issue_item->material}</b> pada tanggal <b>{$mtr_issue->posting_date}</b> akan menjadi negatif setelah transaksi ini. Jumlah tersedia sebelum: <b>{$actual_qty_before}</b>, dikurangi kebutuhan: <b>{$issue_item->needed_qty}</b>, ditambah penambahan setelah: <b>{$actual_qty_after}</b>, menghasilkan sisa: <b>{$after_calculate_qty}</b>. Mohon periksa kembali pergerakan stok.</li>";
+        }
     }
 }

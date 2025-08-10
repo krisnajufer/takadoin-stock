@@ -72,8 +72,9 @@ class PurchaseReceiptController extends Controller
     {
         foreach ($data_id as $key => $val) {
             $po_items = PurchaseOrderItem::where('purchase_order_id', $val)->get();
+            $po = PurchaseOrder::where('id', $val)->first();
             foreach ($po_items as $key => $detail) {
-                $item = ItemStock::where('item_id', $detail->item_id)->first();
+                $actual_qty_before = $this->calculate_before_posting_date($detail->item_id, $posting_date, $posting_time, $po->updated_at);
                 $sle = new StockLedgerEntry();
                 $sle->id = StockLedgerEntry::get_new_code();
                 $sle->transaction_type = 'Purchase Order';
@@ -82,13 +83,13 @@ class PurchaseReceiptController extends Controller
                 $sle->posting_date = $posting_date;
                 $sle->posting_time = $posting_time;
                 $sle->qty_change = $detail->qty;
-                $sle->qty_after_transaction = $item->actual_qty + $detail->qty;
+                $sle->qty_after_transaction = $actual_qty_before + $detail->qty;
                 $sle->save();
-
+                
                 $actual_qty = $this->actual_qty($detail->item_id);
-
                 $item_stock = ItemStock::where('item_id', $detail->item_id)->first();
                 ItemStock::where('item_id', $detail->item_id)->update(['purchase_qty' => $item_stock->purchase_qty - $detail->qty, 'actual_qty' => $actual_qty]);
+                $this->calculate_future_sle($sle);
             }
         }
     }
@@ -100,5 +101,53 @@ class PurchaseReceiptController extends Controller
             ->orderBy('posting_time', 'asc')
             ->sum('qty_change');
         return $result;
+    }
+
+    function calculate_before_posting_date($item_id, $posting_date, $posting_time, $updated_at)
+    {
+        $result = StockLedgerEntry::where('item_id', $item_id)
+            ->where(function($query) use ($posting_date, $posting_time, $updated_at) {
+                $query->where('posting_date', '<', $posting_date)
+                    ->orWhere(function($q) use ($posting_date, $posting_time) {
+                        $q->where('posting_date', $posting_date)
+                        ->where('posting_time', '<', $posting_time);
+                    })
+                    ->orWhere(function($q) use ($posting_date, $posting_time, $updated_at) {
+                        $q->where('posting_date', $posting_date)
+                        ->where('posting_time', $posting_time)
+                        ->where('updated_at', '<', $updated_at);
+                    });
+            })
+            ->sum('qty_change');
+        return $result;
+    }
+
+    function calculate_future_sle($sle){
+        $posting_date = $sle->posting_date;
+        $posting_time = $sle->posting_time;
+        $updated_at = $sle->updated_at;
+        $qty_after_transaction = $sle->qty_after_transaction;
+        $result = StockLedgerEntry::where('item_id', $sle->item_id)
+                    ->where(function($query) use ($posting_date, $posting_time, $updated_at) {
+                        $query->where('posting_date', '>', $posting_date)
+                            ->orWhere(function($q) use ($posting_date, $posting_time, $updated_at) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', '>', $posting_time);
+                            })
+                            ->orWhere(function($q) use ($posting_date, $posting_time, $updated_at) {
+                                $q->where('posting_date', $posting_date)
+                                    ->where('posting_time', $posting_time)
+                                    ->where('updated_at', '>', $updated_at);
+                            });
+                    })
+                    ->orderBy('posting_date', 'ASC')
+                    ->orderBy('posting_time', 'ASC')
+                    ->orderBy('updated_at', 'ASC')
+                    ->get();
+        
+        foreach ($result as $key => $val) {
+            $qty_after_transaction += $val->qty_change;
+            StockLedgerEntry::where('id', $val->id)->update(['qty_after_transaction' => $qty_after_transaction]);
+        }
     }
 }

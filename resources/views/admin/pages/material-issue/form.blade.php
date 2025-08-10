@@ -182,16 +182,27 @@
                     cache: false,
                     contentType: false
                 }).done(function(resp) {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Success",
-                        text: resp,
-                        timer: 3000,
-                        showConfirmButton: false, // agar tidak ada tombol OK
-                        timerProgressBar: true
-                    }).then(() => {
-                        window.location.href = "/material-issue";
-                    });
+                    if (resp) {
+                        if (typeof resp == "object") {
+                            Swal.fire({
+                                title: "<strong>Peringatan</strong>",
+                                icon: "warning",
+                                html:`<ul>${resp.join("")}</ul>`,
+                                showCloseButton: true,
+                                });
+                        }else{
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: resp,
+                                timer: 3000,
+                                showConfirmButton: false, // agar tidak ada tombol OK
+                                timerProgressBar: true
+                            }).then(() => {
+                                window.location.href = "/material-issue";
+                            });
+                        }
+                    }
                 }).fail(function(resp) {
                     Swal.fire({
                         icon: "error",
@@ -326,8 +337,9 @@
 
         function getDatePicker(receiveID) {
             flatpickr(receiveID, {
-                enableTime: false,
-                dateFormat: "d/m/Y",
+                enableTime: true,
+                time_24hr: true,
+                dateFormat: "d/m/Y H:i",
             });
         }
 
