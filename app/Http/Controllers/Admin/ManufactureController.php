@@ -29,7 +29,7 @@ class ManufactureController extends Controller
     public function get_data(Request $request)
     {
         $query = Manufacture::query()
-            ->selectRaw('id, DATE_FORMAT(posting_date, "%d-%m-%Y") AS posting_date');
+            ->selectRaw('id, CONCAT(DATE_FORMAT(posting_date, "%d-%m-%Y"), " ", posting_time) AS posting_date');
 
         if ($request->filled('id')) {
             $query->where('id', 'like', "%{$request->id}%");
@@ -71,6 +71,19 @@ class ManufactureController extends Controller
             DB::rollBack();
             return response()->json($ex->getMessage(), 500);
         }
+    }
+
+    public function edit(string $id)
+    {
+        $id = str_replace("-", "/", $id);
+        $result['mnf'] = Manufacture::selectRaw('manufactures.id, CONCAT(DATE_FORMAT(manufactures.posting_date, "%d/%m/%Y")," ", manufactures.posting_time) AS posting_date')->first();
+        $result["action"] = "update";
+        $result['mnf_items'] = ManufactureItem::join('manufactures', 'manufactures.id', '=', 'manufacture_items.manufacture_id')
+            ->join('items', 'items.id', '=', 'manufacture_items.item_id')
+            ->selectRaw("manufacture_items.item_id, items.name AS item_name, manufacture_items.qty")
+            ->where('manufactures.id', $id)->get();
+
+        return view('admin.pages.manufacture.form', $result);
     }
 
     function store_items($request, $mnf)

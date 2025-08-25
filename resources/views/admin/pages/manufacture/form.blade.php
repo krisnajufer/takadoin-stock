@@ -16,7 +16,7 @@
 @push('custom-button')
     <div class="d-flex gap-2">
         <a class="btn btn-secondary rounded py-1 text-sm" href="{{ route('purchase-order.index') }}">Back</a>
-        @if (!isset($po))
+        @if (!isset($mnf))
             <button class="btn btn-primary rounded py-1 text-sm" id="{{ $action }}-button">Save</button>
         @endif
     </div>
@@ -27,13 +27,13 @@
         <div class="card-body">
             <form data-id="{{ $action }}">
                 <div class="row gy-3">
-                    <input type="hidden" value="{{ isset($po) ? $po->id : '' }}" id="id" name="id">
+                    <input type="hidden" value="{{ isset($mnf) ? $mnf->id : '' }}" id="id" name="id">
                     <div class="col-6">
                         <label class="form-label" id="posting_date">Tanggal Pembentukan</label>
                         <div class=" position-relative">
                             <input class="form-control radius-8 bg-base datepicker" id="posting_date" name="posting_date"
-                                type="text" value="{{ isset($po) ? $po->posting_date : '' }}"
-                                {{ isset($po) ? 'disabled' : '' }}>
+                                type="text" value="{{ isset($mnf) ? $mnf->posting_date : '' }}"
+                                {{ isset($mnf) ? 'disabled' : '' }}>
                             <span
                                 class="position-absolute end-0 top-50 translate-middle-y me-12 line-height-1"><iconify-icon
                                     icon="solar:calendar-linear" class="icon text-lg"></iconify-icon></span>
@@ -53,7 +53,7 @@
                                     <th>
                                         <div class="form-check style-check d-flex align-items-center">
                                             <input class="form-check-input" type="checkbox" id="check-all"
-                                                {{ isset($po) ? 'disabled' : '' }} />
+                                                {{ isset($mnf) ? 'disabled' : '' }} />
                                         </div>
                                     </th>
                                     <th>Bouquet</th>
@@ -63,7 +63,7 @@
                             </thead>
                             <tbody>
                                 @if (isset($mnf_items))
-                                    @foreach ($mnf_items as $poi)
+                                    @foreach ($mnf_items as $mnfi)
                                         <tr>
                                             <td>
                                                 <div class="form-check style-check d-flex align-items-center">
@@ -72,14 +72,14 @@
                                             </td>
                                             <td>
                                                 <select name="bouquet[]" class="bouquet-select" style="width:70%;" disabled>
-                                                    <option value="{{ $poi->item_id }}" selected="selected">
-                                                        {{ $poi->item_name }}
+                                                    <option value="{{ $mnfi->item_id }}" selected="selected">
+                                                        {{ $mnfi->item_name }}
                                                     </option>
                                                 </select>
                                             </td>
                                             <td>
                                                 <input type="text" name="qty[]" class="form-control numeric"
-                                                    value="{{ $poi->qty }}" disabled>
+                                                    value="{{ $mnfi->qty }}" disabled>
                                             </td>
                                             <td>
                                                 <button class="btn btn-warning rounded py-1 text-sm detail"
@@ -110,7 +110,7 @@
 
                             </tbody>
                         </table>
-                        @if (!isset($po))
+                        @if (!isset($mnf))
                             <button class="btn btn-danger rounded py-1 text-sm mt-3 d-none" id="delete-row">Delete
                                 Row</button>
                             <button class="btn btn-dark rounded py-1 text-sm mt-3" id="add-row">Add
