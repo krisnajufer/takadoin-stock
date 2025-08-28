@@ -15,7 +15,7 @@
 
 @push('custom-button')
     <div class="d-flex gap-2">
-        <a class="btn btn-secondary rounded py-1 text-sm" href="{{ route('purchase-order.index') }}">Back</a>
+        <a class="btn btn-secondary rounded py-1 text-sm" href="{{ route('manufacture.index') }}">Back</a>
         @if (!isset($mnf))
             <button class="btn btn-primary rounded py-1 text-sm" id="{{ $action }}-button">Save</button>
         @endif

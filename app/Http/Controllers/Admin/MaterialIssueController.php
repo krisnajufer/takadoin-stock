@@ -40,14 +40,27 @@ class MaterialIssueController extends Controller
         return view('admin.pages.material-issue.form', $result);
     }
 
+    public function edit(string $id)
+    {
+        $id = str_replace("-", "/", $id);
+        $result['mtr_issue'] = MaterialIssue::selectRaw('material_issues.id, CONCAT(DATE_FORMAT(material_issues.posting_date, "%d/%m/%Y")," ", material_issues.posting_time) AS posting_date, material_issues.issue_type')->first();
+        $result["action"] = "update";
+        $result['issue_items'] = MaterialIssueItem::join('material_issues', 'material_issues.id', '=', 'material_issue_items.material_issue_id')
+            ->join('items', 'items.id', '=', 'material_issue_items.item_id')
+            ->selectRaw("material_issue_items.item_id, items.name AS item_name, material_issue_items.qty, material_issue_items.price, material_issue_items.amount")
+            ->where('material_issues.id', $id)->get();
+
+        return view('admin.pages.material-issue.form', $result);
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();
         try {
             $mtr_issue = new MaterialIssue();
-            $mtr_issue->id = MaterialIssue::get_new_code($request->is_material);
-            $mtr_issue->posting_date = Carbon::createFromFormat('d/m/Y', $request->posting_date)->format('Y-m-d');
-            $mtr_issue->posting_time = Carbon::createFromFormat('d/m/Y', $request->posting_date)->format('H:i');
+            $mtr_issue->id = MaterialIssue::get_new_code();
+            $mtr_issue->posting_date = Carbon::createFromFormat('d/m/Y H:i', $request->posting_date)->format('Y-m-d');
+            $mtr_issue->posting_time = Carbon::createFromFormat('d/m/Y H:i', $request->posting_date)->format('H:i');
             $mtr_issue->issue_type = $request->issue_type;
             $mtr_issue->save();
 
@@ -186,20 +199,20 @@ class MaterialIssueController extends Controller
     }
 
     function validate_material($mtr_issue, $issue_item){
-        $actual_qty_before = $this->calculate_before_posting_date($issue_item->item_id, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
-        $actual_qty_after = $this->calculate_after_posting_date($issue_item->item_id, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
+        $actual_qty_before = $this->calculate_before_posting_date($issue_item->material, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
+        $actual_qty_after = $this->calculate_after_posting_date($issue_item->material, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
 
         // dd($actual_qty_after, $actual_qty_before);
-        if ($actual_qty_before < $issue_item->needed_qty) {
-            // return "<li>Stok Material <b>".$issue_item->material."</b> di tanggal <b>".$mtr_issue->posting_date."</b> hanya ".$actual_qty_before.", stok yang dibutuhkan ".$issue_item->needed_qty."</li>";
-            return "<li>Stok material <b>{$issue_item->material}</b> pada tanggal <b>{$mtr_issue->posting_date}</b> hanya tersedia <b>{$actual_qty_before}</b>, sedangkan jumlah yang dibutuhkan adalah <b>{$issue_item->needed_qty}</b>. Harap lakukan penyesuaian stok terlebih dahulu.</li>";
+        if ($actual_qty_before < $issue_item->qty) {
+            // return "<li>Stok Material <b>".$issue_item->material."</b> di tanggal <b>".$mtr_issue->posting_date."</b> hanya ".$actual_qty_before.", stok yang dibutuhkan ".$issue_item->qty."</li>";
+            return "<li>Stok material <b>{$issue_item->material}</b> pada tanggal <b>{$mtr_issue->posting_date}</b> hanya tersedia <b>{$actual_qty_before}</b>, sedangkan jumlah yang dibutuhkan adalah <b>{$issue_item->qty}</b>. Harap lakukan penyesuaian stok terlebih dahulu.</li>";
 
         }
 
-        $after_calculate_qty = $actual_qty_before - $issue_item->needed_qty + $actual_qty_after;
+        $after_calculate_qty = $actual_qty_before - $issue_item->qty + $actual_qty_after;
         if ($after_calculate_qty < 0) {
-            // return "<li>Stok Material <b>".$issue_item->material."</b> di tanggal <b>".$mtr_issue->posting_date."</b> hanya ".$issue_item->current_qty.", stok yang dibutuhkan ".$issue_item->needed_qty." dan menjadi negatif yaitu ".$after_calculate_qty."</li>";
-            return "<li>Stok material <b>{$issue_item->material}</b> pada tanggal <b>{$mtr_issue->posting_date}</b> akan menjadi negatif setelah transaksi ini. Jumlah tersedia sebelum: <b>{$actual_qty_before}</b>, dikurangi kebutuhan: <b>{$issue_item->needed_qty}</b>, ditambah penambahan setelah: <b>{$actual_qty_after}</b>, menghasilkan sisa: <b>{$after_calculate_qty}</b>. Mohon periksa kembali pergerakan stok.</li>";
+            // return "<li>Stok Material <b>".$issue_item->material."</b> di tanggal <b>".$mtr_issue->posting_date."</b> hanya ".$issue_item->current_qty.", stok yang dibutuhkan ".$issue_item->qty." dan menjadi negatif yaitu ".$after_calculate_qty."</li>";
+            return "<li>Stok material <b>{$issue_item->material}</b> pada tanggal <b>{$mtr_issue->posting_date}</b> akan menjadi negatif setelah transaksi ini. Jumlah tersedia sebelum: <b>{$actual_qty_before}</b>, dikurangi kebutuhan: <b>{$issue_item->qty}</b>, ditambah penambahan setelah: <b>{$actual_qty_after}</b>, menghasilkan sisa: <b>{$after_calculate_qty}</b>. Mohon periksa kembali pergerakan stok.</li>";
         }
     }
 }

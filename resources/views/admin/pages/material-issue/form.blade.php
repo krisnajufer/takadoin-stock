@@ -41,7 +41,7 @@
                     </div>
                     <div class="col-6">
                         <label class="form-label" id="posting_date">Tipe Issue</label>
-                        <select name="issue_type" id="issue_type" class="form-select">
+                        <select name="issue_type" id="issue_type" class="form-select" {{ isset($mtr_issue) ? 'disabled' : '' }}>
                             <option value="">- Tipe Issue --</option>
                             <option value="Broken" {{ isset($mtr_issue) && $mtr_issue->issue_type == 'Broken' ? 'selected' : ''  }}>Rusak</option>
                             <option value="Expired" {{ isset($mtr_issue) && $mtr_issue->issue_type == 'Expired' ? 'selected' : ''  }}>Expired</option>

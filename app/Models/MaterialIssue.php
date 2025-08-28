@@ -23,7 +23,7 @@ class MaterialIssue extends Model
         $increment = (int)$max + 1;
 
         $str = str_pad($increment, 5, '0', STR_PAD_LEFT);
-        $new_code = "PO/" . $year_now . "/" . $str;
+        $new_code = "ISS/" . $year_now . "/" . $str;
 
         return $new_code;
     }
