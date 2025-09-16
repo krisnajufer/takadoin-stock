@@ -17,6 +17,9 @@ return new class extends Migration
             $table->integer('actual_qty')->default('0');
             $table->integer('issue_qty')->default('0');
             $table->integer('purchase_qty')->default('0');
+            $table->integer('safety_stock')->default('0');
+            $table->integer('min')->default('0');
+            $table->integer('max')->default('0');
             $table->timestamps();
 
             $table->foreign('item_id')->references('id')->on('items')->onDelete('restrict');

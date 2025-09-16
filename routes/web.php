@@ -64,6 +64,7 @@ Route::controller(PurchaseOrderController::class)->prefix('/purchase-order')->na
     Route::get('/edit/{id}', 'edit')->name('edit');
     Route::post('/update', 'update')->name('update');
     Route::post('/destroy', 'destroy')->name('destroy');
+    Route::get('/calculate_method', 'calculate_method')->name('calculate_method');
 });
 
 Route::controller(PurchaseReceiptController::class)->prefix('/purchase-receipt')->name('purchase-receipt.')->group(function () {

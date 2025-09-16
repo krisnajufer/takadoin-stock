@@ -20,6 +20,10 @@ return new class extends Migration
             $table->time('posting_time');
             $table->integer('qty_change');
             $table->integer('qty_after_transaction');
+            $table->integer('lead_time')->default('0');
+            $table->integer('safety_stock')->default('0');
+            $table->integer('min')->default('0');
+            $table->integer('max')->default('0');
             $table->timestamps();
         });
     }

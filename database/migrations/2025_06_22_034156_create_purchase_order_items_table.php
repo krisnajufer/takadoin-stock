@@ -18,6 +18,10 @@ return new class extends Migration
             $table->integer('qty');
             $table->integer('price');
             $table->integer('amount');
+            $table->integer('lead_time')->default('0');
+            $table->integer('safety_stock')->default('0');
+            $table->integer('min')->default('0');
+            $table->integer('max')->default('0');
             $table->timestamps();
 
             $table->foreign('purchase_order_id')->references('id')->on('purchase_orders')->onDelete('restrict');

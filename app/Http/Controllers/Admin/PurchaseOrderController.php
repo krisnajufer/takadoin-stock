@@ -127,4 +127,8 @@ class PurchaseOrderController extends Controller
             ItemStock::where('item_id', $value->material)->update(['purchase_qty' => $item_stock->purchase_qty + $value->qty]);
         }
     }
+
+    public function calculate_method(Request $request){
+        
+    }
 }

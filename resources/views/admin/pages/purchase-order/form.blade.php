@@ -24,7 +24,7 @@
 
 @section('content')
     <div class="card">
-        <div class="card-body">
+        <div class="card-body ">
             <form data-id="{{ $action }}">
                 <div class="row gy-3">
                     <input type="hidden" value="{{ isset($po) ? $po->id : '' }}" id="id" name="id">
@@ -49,15 +49,18 @@
                             </select>
                         @endif
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 overflow-auto">
                         <label class="form-label" for="po_items">Materials</label>
                         <table class="table bordered-table mb-0 table-hover" id="po_items">
                             <colgroup>
                                 <col style="width: 0.5rem;">
+                                <col style="width: 20rem;">
                                 <col style="width: 10rem;">
-                                <col style="width: 2rem;">
-                                <col style="width: 2rem;">
-                                <col style="width: 2rem;">
+                                <col style="width: 10rem;">
+                                <col style="width: 10rem;">
+                                <col style="width: 10rem;">
+                                <col style="width: 10rem;">
+                                <col style="width: 10rem;">
                             </colgroup>
                             <thead>
                                 <tr>
@@ -68,6 +71,9 @@
                                         </div>
                                     </th>
                                     <th>Material</th>
+                                    <th>SS</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
                                     <th>Qty</th>
                                     <th>Harga</th>
                                     <th>Amount</th>
@@ -114,6 +120,15 @@
                                         <td>
                                             <select name="material[]" class="material-select" style="width:70%;">
                                             </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="ss[]" class="form-control numeric" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="min[]" class="form-control numeric" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="max[]" class="form-control numeric" readonly>
                                         </td>
                                         <td>
                                             <input type="text" name="qty[]" class="form-control numeric qty">
@@ -221,6 +236,15 @@
                     '</select>' +
                     '</td>' +
                     '<td>' +
+                    '<input type="text" name="ss[]" class="form-control numeric" readonly>' +
+                    '</td>' +
+                    '<td>' +
+                    '<input type="text" name="min[]" class="form-control numeric" readonly>' +
+                    '</td>' +
+                    '<td>' +
+                    '<input type="text" name="max[]" class="form-control numeric" readonly>' +
+                    '</td>' +
+                    '<td>' +
                     '<input type="text" name="qty[]" class="form-control numeric qty">' +
                     '</td>' +
                     '<td>' +
@@ -265,6 +289,10 @@
                 let row = $(this).closest('tr');
                 calculateAmount(row);
             });
+            $('#po_items').on('change', '.material-select', function() {
+                let row = $(this).closest('tr');
+                console.log($(this).val());
+            });
 
             $('#supplier_id').select2({
                 width: '100%',
@@ -278,6 +306,7 @@
                 },
                 placeholder: 'Pilih Supplier',
             });
+
         });
 
         function initSelect2() {
@@ -350,6 +379,17 @@
             let price = parseFloat(row.find('input[name="price[]"]').val()) || 0;
             let amount = qty * price;
             row.find('input[name="amount[]"]').val(amount);
+        }
+
+        function calculateMethod(material_id) { 
+            $.ajax({
+                type: "method",
+                url: "/purchase-order/calculate_method",
+                data: {"material_id": material_id},
+                dataType: "JSON",
+            }).done(function(res) { 
+                console.log(res);
+            });
         }
     </script>
 @endpush

@@ -164,15 +164,21 @@
 
             $('form').submit(function(e) {
                 e.preventDefault()
-                let {
-                    issue_items,
-                    total
-                } = get_issue_items();
+                let { issue_items, total } = get_issue_items();
                 var formData = new FormData(this);
                 formData.append("_token", "{{ csrf_token() }}");
                 formData.append("issue_items", JSON.stringify(issue_items))
                 formData.append("grand_total", total)
+                if (!formData.get("posting_date") || !issue_items || !formData.get("issue_type")) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Warning",
+                        text: "Pastikan setiap field terisi dengan benar",
+                        timer: 3000
+                    });
 
+                    return
+                }
                 $.ajax({
                     type: "POST",
                     url: "/material-issue/" + $(this).data("id"),
