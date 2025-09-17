@@ -31,6 +31,7 @@
 @section('content')
     <div class="card basic-data-table">
         <div class="card-header d-flex gap-3">
+            <span class="text-black fw-bold">Stok mendekati atau kurang dari safety stock</span>
             {{-- <div>
                 <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
                     placeholder="Kode Material">
@@ -41,22 +42,23 @@
             </div> --}}
         </div>
         <div class="card-body overflow-auto">
-            {{-- <table class="table bordered-table mb-0 table-hover dataTable" id="dataTable">
+            <table class="table bordered-table mb-0 table-hover dataTable" id="dataTable">
                 <thead>
                     <tr>
-                        <th>
+                        {{-- <th>
                             <div class="form-check style-check d-flex align-items-center">
                                 <input class="form-check-input" type="checkbox" id="check-all" />
                             </div>
-                        </th>
+                        </th> --}}
                         <th>Kode Material</th>
                         <th>Nama Material</th>
                         <th>Stok</th>
+                        <th>Safety Stock</th>
                     </tr>
                 </thead>
                 <tbody>
                 </tbody>
-            </table> --}}
+            </table>
         </div>
     </div>
 @endsection

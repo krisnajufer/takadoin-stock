@@ -132,8 +132,12 @@ class ItemController extends Controller
         DB::beginTransaction();
         try {
             $ids = $request->json()->all();
+            if ($url[4] == "Material") {                
+                ItemStock::whereIn('item_id', $ids['data'])->delete();
+            }else{
+                $this->destroy_bom($ids);
+            }
             Item::whereIn('id', $ids['data'])->delete();
-            ItemStock::whereIn('item_id', $ids['data'])->delete();
 
             DB::commit();
             return response()->json("success deleted data " . $url[4], 200);
@@ -202,6 +206,15 @@ class ItemController extends Controller
             $bom_material->item_id = $value->material;
             $bom_material->qty = $value->qty;
             $bom_material->save();
+        }
+    }
+
+    function destroy_bom($ids)
+    {
+        foreach ($ids as $key => $id) {
+            $bom = Bom::where('item_id', $id)->first();
+            BomMaterial::where('bom_id', $bom->id)->delete();
+            $bom->delete();
         }
     }
 }

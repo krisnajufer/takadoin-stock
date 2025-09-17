@@ -102,3 +102,7 @@ Route::controller(MaterialIssueController::class)->prefix('/material-issue')->na
 Route::controller(DashboardController::class)->prefix('/')->name('dashboard.')->group(function () {
     Route::get('/', 'index')->name('index');
 });
+
+Route::get('/auth', function () {
+    return view('admin.pages.auth.form');
+});
