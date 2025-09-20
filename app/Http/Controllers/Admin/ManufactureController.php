@@ -143,39 +143,25 @@ class ManufactureController extends Controller
 
     function calculate_before_posting_date($item_id, $posting_date, $posting_time, $created_at)
     {
-        $result = StockLedgerEntry::where('item_id', $item_id)
-                    ->where(function($query) use ($posting_date, $posting_time, $created_at) {
-                        $query->where('posting_date', '<', $posting_date)
-                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
-                                $q->where('posting_date', $posting_date)
-                                    ->where('posting_time', '<', $posting_time);
-                            })
-                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
-                                $q->where('posting_date', $posting_date)
-                                    ->where('posting_time', $posting_time)
-                                    ->where('created_at', '<', $created_at);
-                            });
-                    })
-                    ->sum('qty_change');
+        $posting_timestamp = $posting_date . " " . $posting_time;
+
+        $result = StockLedgerEntry::whereRaw(
+            'item_id = ? AND TIMESTAMP(posting_date, posting_time) <= ?',
+            [$item_id, $posting_timestamp]
+        )->sum('qty_change');
+
         // dd($result);
         return $result;
     }
     function calculate_after_posting_date($item_id, $posting_date, $posting_time, $created_at)
     {
-        $result = StockLedgerEntry::where('item_id', $item_id)
-                    ->where(function($query) use ($posting_date, $posting_time, $created_at) {
-                        $query->where('posting_date', '>', $posting_date)
-                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
-                                $q->where('posting_date', $posting_date)
-                                    ->where('posting_time', '>', $posting_time);
-                            })
-                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
-                                $q->where('posting_date', $posting_date)
-                                    ->where('posting_time', $posting_time)
-                                    ->where('created_at', '>', $created_at);
-                            });
-                    })
-                    ->sum('qty_change');
+        $posting_timestamp = $posting_date . " " . $posting_time;
+
+        $result = StockLedgerEntry::whereRaw(
+            'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ?',
+            [$item_id, $posting_timestamp]
+        )->sum('qty_change');
+
         return $result;
     }
 

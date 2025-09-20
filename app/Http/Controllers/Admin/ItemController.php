@@ -132,7 +132,7 @@ class ItemController extends Controller
         DB::beginTransaction();
         try {
             $ids = $request->json()->all();
-            if ($url[4] == "Material") {                
+            if ($url[4] == "material") {                
                 ItemStock::whereIn('item_id', $ids['data'])->delete();
             }else{
                 $this->destroy_bom($ids);
