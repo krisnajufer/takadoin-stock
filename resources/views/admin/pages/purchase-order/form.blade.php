@@ -28,7 +28,7 @@
             <form data-id="{{ $action }}">
                 <div class="row gy-3">
                     <input type="hidden" value="{{ isset($po) ? $po->id : '' }}" id="id" name="id">
-                    <div class="col-6">
+                    <div class="col">
                         <label class="form-label" id="posting_date">Tanggal Pemesanan</label>
                         <div class=" position-relative">
                             <input class="form-control radius-8 bg-base datepicker" id="posting_date" name="posting_date"
@@ -39,7 +39,20 @@
                                     icon="solar:calendar-linear" class="icon text-lg"></iconify-icon></span>
                         </div>
                     </div>
-                    <div class="col-6">
+                    @if(isset($po))
+                        <div class="col">
+                            <label class="form-label" id="received_at">Tanggal Penerimaan</label>
+                            <div class=" position-relative">
+                                <input class="form-control radius-8 bg-base datepicker" id="received_at" name="received_at"
+                                    type="text" value="{{ isset($po) ? $po->received_at : '' }}"
+                                    {{ isset($po) ? 'disabled' : '' }}>
+                                <span
+                                    class="position-absolute end-0 top-50 translate-middle-y me-12 line-height-1"><iconify-icon
+                                        icon="solar:calendar-linear" class="icon text-lg"></iconify-icon></span>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="col">
                         <label class="form-label">Supplier</label>
                         @if (isset($po))
                             <input type="text" name="supplier_id" value="{{ $po->supplier_name }}" class="form-control"
@@ -95,6 +108,15 @@
                                                         {{ $poi->item_name }}
                                                     </option>
                                                 </select>
+                                            </td>
+                                             <td>
+                                                <input type="text" name="ss[]" class="form-control numeric" readonly>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="min[]" class="form-control numeric" readonly>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="max[]" class="form-control numeric" readonly>
                                             </td>
                                             <td>
                                                 <input type="text" name="qty[]" class="form-control numeric"

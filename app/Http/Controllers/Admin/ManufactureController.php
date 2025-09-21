@@ -150,7 +150,6 @@ class ManufactureController extends Controller
             [$item_id, $posting_timestamp]
         )->sum('qty_change');
 
-        // dd($result);
         return $result;
     }
     function calculate_after_posting_date($item_id, $posting_date, $posting_time, $created_at)

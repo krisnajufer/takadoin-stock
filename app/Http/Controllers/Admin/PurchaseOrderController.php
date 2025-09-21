@@ -69,7 +69,14 @@ class PurchaseOrderController extends Controller
     public function edit(string $id)
     {
         $id = str_replace("-", "/", $id);
-        $result['po'] = PurchaseOrder::selectRaw('purchase_orders.id, DATE_FORMAT(purchase_orders.posting_date, "%d/%m/%Y") AS posting_date, purchase_orders.status, suppliers.name AS supplier_name, suppliers.id AS suuplier_id')
+        $result['po'] = PurchaseOrder::selectRaw('
+            purchase_orders.id, 
+            DATE_FORMAT(purchase_orders.posting_date, "%d/%m/%Y") AS posting_date, 
+            DATE_FORMAT(CONCAT(purchase_orders.received_at, " ", purchase_orders.received_time), "%d/%m/%Y %H:%i") AS received_at, 
+            purchase_orders.status, 
+            suppliers.name AS supplier_name, 
+            suppliers.id AS supplier_id
+        ')
             ->join('suppliers', 'purchase_orders.supplier_id', '=', 'suppliers.id')->where('purchase_orders.id', $id)->first();
         $result["action"] = "update";
         $result['po_items'] = PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
