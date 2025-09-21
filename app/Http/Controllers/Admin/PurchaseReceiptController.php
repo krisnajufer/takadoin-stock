@@ -108,7 +108,7 @@ class PurchaseReceiptController extends Controller
         $posting_timestamp = $posting_date . " " . $posting_time;
         $result = StockLedgerEntry::whereRaw(
             'item_id = ? AND TIMESTAMP(posting_date, posting_time) <= ? AND created_at < ?',
-            [$item_id, $posting_timestamp, $created_at]
+            [$item_id, $posting_timestamp, $updated_at]
         )->sum('qty_change');
         return $result;
     }
