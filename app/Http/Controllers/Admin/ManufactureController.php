@@ -194,23 +194,13 @@ class ManufactureController extends Controller
     }
 
     function calculate_future_sle($sle){
-        $posting_date = $sle->posting_date;
-        $posting_time = $sle->posting_time;
+        $posting_timestamp = $sle->posting_date ." ". $sle->posting_time;
         $created_at = $sle->created_at;
         $qty_after_transaction = $sle->qty_after_transaction;
-        $result = StockLedgerEntry::where('item_id', $sle->item_id)
-                    ->where(function($query) use ($posting_date, $posting_time, $created_at) {
-                        $query->where('posting_date', '>', $posting_date)
-                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
-                                $q->where('posting_date', $posting_date)
-                                    ->where('posting_time', '>', $posting_time);
-                            })
-                            ->orWhere(function($q) use ($posting_date, $posting_time, $created_at) {
-                                $q->where('posting_date', $posting_date)
-                                    ->where('posting_time', $posting_time)
-                                    ->where('created_at', '>', $created_at);
-                            });
-                    })
+        $result = StockLedgerEntry::whereRaw(
+                        'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ?',
+                        [$sle->item_id, $posting_timestamp]
+                    )
                     ->orderBy('posting_date', 'ASC')
                     ->orderBy('posting_time', 'ASC')
                     ->orderBy('created_at', 'ASC')
