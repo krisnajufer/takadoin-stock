@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\MaterialIssueController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\PurchaseReceiptController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\PatchController;
 use App\Models\MaterialIssue;
 use Illuminate\Support\Facades\Route;
 
@@ -101,6 +102,10 @@ Route::controller(MaterialIssueController::class)->prefix('/material-issue')->na
 
 Route::controller(DashboardController::class)->prefix('/')->name('dashboard.')->group(function () {
     Route::get('/', 'index')->name('index');
+});
+
+Route::controller(PatchController::class)->prefix('/patch')->name('patch.')->group(function () {
+    Route::get('/repair_sle', 'repair_sle')->name('repair_sle');
 });
 
 Route::get('/auth', function () {

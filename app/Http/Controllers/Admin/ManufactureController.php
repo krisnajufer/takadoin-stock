@@ -146,8 +146,8 @@ class ManufactureController extends Controller
         $posting_timestamp = $posting_date . " " . $posting_time;
 
         $result = StockLedgerEntry::whereRaw(
-            'item_id = ? AND TIMESTAMP(posting_date, posting_time) <= ?',
-            [$item_id, $posting_timestamp]
+            'item_id = ? AND TIMESTAMP(posting_date, posting_time) <= ? AND created_at < ?',
+            [$item_id, $posting_timestamp, $created_at]
         )->sum('qty_change');
 
         return $result;
@@ -157,8 +157,8 @@ class ManufactureController extends Controller
         $posting_timestamp = $posting_date . " " . $posting_time;
 
         $result = StockLedgerEntry::whereRaw(
-            'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ?',
-            [$item_id, $posting_timestamp]
+            'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ? AND created_at > ?',
+            [$item_id, $posting_timestamp, $created_at]
         )->sum('qty_change');
 
         return $result;
@@ -197,8 +197,8 @@ class ManufactureController extends Controller
         $created_at = $sle->created_at;
         $qty_after_transaction = $sle->qty_after_transaction;
         $result = StockLedgerEntry::whereRaw(
-                        'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ?',
-                        [$sle->item_id, $posting_timestamp]
+                        'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ? AND created_at > ?',
+                        [$sle->item_id, $posting_timestamp, $created_at]
                     )
                     ->orderBy('posting_date', 'ASC')
                     ->orderBy('posting_time', 'ASC')

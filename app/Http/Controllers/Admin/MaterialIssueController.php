@@ -89,6 +89,7 @@ class MaterialIssueController extends Controller
         if ($throw) {
             return $throw;
         }
+        // dd(json_decode($request->issue_items));
         foreach (json_decode($request->issue_items) as $key => $value) {
             $issue_item = new MaterialIssueItem();
             $issue_item->material_issue_id = $mtr_issue->id;
@@ -105,6 +106,7 @@ class MaterialIssueController extends Controller
     function make_sle($mtr_issue, $issue_item)
     {
         $actual_qty_before = $this->calculate_before_posting_date($issue_item->item_id, $mtr_issue->posting_date, $mtr_issue->posting_time, $mtr_issue->created_at);
+
         $sle = new StockLedgerEntry();
         $sle->id = StockLedgerEntry::get_new_code();
         $sle->transaction_type = 'Material Issue';
@@ -136,8 +138,8 @@ class MaterialIssueController extends Controller
         $posting_timestamp = $posting_date . " " . $posting_time;
 
         $result = StockLedgerEntry::whereRaw(
-            'item_id = ? AND TIMESTAMP(posting_date, posting_time) <= ?',
-            [$item_id, $posting_timestamp]
+            'item_id = ? AND TIMESTAMP(posting_date, posting_time) <= ? AND created_at < ?',
+            [$item_id, $posting_timestamp, $created_at]
         )->sum('qty_change');
         // dd($result);
         return $result;
@@ -147,8 +149,8 @@ class MaterialIssueController extends Controller
         $posting_timestamp = $posting_date . " " . $posting_time;
 
         $result = StockLedgerEntry::whereRaw(
-            'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ?',
-            [$item_id, $posting_timestamp]
+            'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ? AND created_at > ?',
+            [$item_id, $posting_timestamp, $created_at]
         )->sum('qty_change');
 
         return $result;
@@ -159,8 +161,8 @@ class MaterialIssueController extends Controller
         $created_at = $sle->created_at;
         $qty_after_transaction = $sle->qty_after_transaction;
         $result = StockLedgerEntry::whereRaw(
-                        'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ?',
-                        [$sle->item_id, $posting_timestamp]
+                        'item_id = ? AND TIMESTAMP(posting_date, posting_time) >= ? AND created_at > ?',
+                        [$sle->item_id, $posting_timestamp, $created_at]
                     )
                     ->orderBy('posting_date', 'ASC')
                     ->orderBy('posting_time', 'ASC')
