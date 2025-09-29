@@ -29,7 +29,7 @@
                 <div class="row gy-3">
                     <input type="hidden" value="{{ isset($po) ? $po->id : '' }}" id="id" name="id">
                     <div class="col">
-                        <label class="form-label" id="posting_date">Tanggal Pemesanan</label>
+                        <label class="form-label">Tanggal Pemesanan</label>
                         <div class=" position-relative">
                             <input class="form-control radius-8 bg-base datepicker" id="posting_date" name="posting_date"
                                 type="text" value="{{ isset($po) ? $po->posting_date : '' }}"
@@ -110,13 +110,13 @@
                                                 </select>
                                             </td>
                                              <td>
-                                                <input type="text" name="ss[]" class="form-control numeric" readonly>
+                                                <input type="text" name="ss[]" class="form-control numeric" value="{{ $poi->safety_stock }}" readonly>
                                             </td>
                                             <td>
-                                                <input type="text" name="min[]" class="form-control numeric" readonly>
+                                                <input type="text" name="min[]" class="form-control numeric" value="{{ $poi->min }}" readonly>
                                             </td>
                                             <td>
-                                                <input type="text" name="max[]" class="form-control numeric" readonly>
+                                                <input type="text" name="max[]" class="form-control numeric" value="{{ $poi->max }}" readonly>
                                             </td>
                                             <td>
                                                 <input type="text" name="qty[]" class="form-control numeric"
@@ -313,7 +313,8 @@
             });
             $('#po_items').on('change', '.material-select', function() {
                 let row = $(this).closest('tr');
-                console.log($(this).val());
+                calculateMethod($(this).val(), row)
+                // console.log($(this).val());
             });
 
             $('#supplier_id').select2({
@@ -327,6 +328,16 @@
                     }
                 },
                 placeholder: 'Pilih Supplier',
+            });
+
+            $('#posting_date').on('change', function () {
+                 $('#po_items').find('tr').each(function () {
+                    let row = $(this);
+                    let selectedMaterial = $(this).find('select[name="material[]"]').val();
+
+                    // Panggil fungsi yang sama
+                    calculateMethod(selectedMaterial, row);
+                });
             });
 
         });
@@ -371,6 +382,9 @@
                 let qty = $(this).find('input[name="qty[]"]').val();
                 let price = $(this).find('input[name="price[]"]').val();
                 let amount = $(this).find('input[name="amount[]"]').val();
+                let ss = $(this).find('input[name="ss[]"]').val();
+                let min = $(this).find('input[name="min[]"]').val();
+                let max = $(this).find('input[name="max[]"]').val();
 
                 if (material && qty && price && amount) {
                     po_items.push({
@@ -378,6 +392,9 @@
                         qty: qty,
                         price: price,
                         amount: amount,
+                        ss: ss,
+                        min: min,
+                        max: max,
                     });
                     total += parseInt(amount);
                 }
@@ -403,14 +420,20 @@
             row.find('input[name="amount[]"]').val(amount);
         }
 
-        function calculateMethod(material_id) { 
+        function calculateMethod(material_id, row) { 
             $.ajax({
-                type: "method",
+                type: "GET",
                 url: "/purchase-order/calculate_method",
-                data: {"material_id": material_id},
+                data: {
+                    "material_id": material_id,
+                    "posting_date": $('#posting_date').val()
+                },
                 dataType: "JSON",
             }).done(function(res) { 
                 console.log(res);
+                row.find('input[name="ss[]"]').val(res.safety_stock);
+                row.find('input[name="min[]"]').val(res.min);
+                row.find('input[name="max[]"]').val(res.max);
             });
         }
     </script>

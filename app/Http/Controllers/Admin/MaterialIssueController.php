@@ -43,7 +43,7 @@ class MaterialIssueController extends Controller
     public function edit(string $id)
     {
         $id = str_replace("-", "/", $id);
-        $result['mtr_issue'] = MaterialIssue::selectRaw('material_issues.id, CONCAT(DATE_FORMAT(material_issues.posting_date, "%d/%m/%Y")," ", material_issues.posting_time) AS posting_date, material_issues.issue_type')->first();
+        $result['mtr_issue'] = MaterialIssue::selectRaw('material_issues.id, CONCAT(DATE_FORMAT(material_issues.posting_date, "%d/%m/%Y")," ", material_issues.posting_time) AS posting_date, material_issues.issue_type')->where('material_issues.id', $id)->first();
         $result["action"] = "update";
         $result['issue_items'] = MaterialIssueItem::join('material_issues', 'material_issues.id', '=', 'material_issue_items.material_issue_id')
             ->join('items', 'items.id', '=', 'material_issue_items.item_id')

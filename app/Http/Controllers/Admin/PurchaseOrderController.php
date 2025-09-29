@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Carbon;
+use App\Models\StockLedgerEntry;
 
 class PurchaseOrderController extends Controller
 {
@@ -81,7 +82,7 @@ class PurchaseOrderController extends Controller
         $result["action"] = "update";
         $result['po_items'] = PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
             ->join('items', 'items.id', '=', 'purchase_order_items.item_id')
-            ->selectRaw("purchase_order_items.item_id, items.name AS item_name, purchase_order_items.qty, purchase_order_items.price, purchase_order_items.amount")
+            ->selectRaw("purchase_order_items.item_id, items.name AS item_name, purchase_order_items.qty, purchase_order_items.price, purchase_order_items.amount, purchase_order_items.safety_stock, purchase_order_items.min, purchase_order_items.max")
             ->where('purchase_orders.id', $id)->get();
 
         return view('admin.pages.purchase-order.form', $result);
@@ -128,6 +129,9 @@ class PurchaseOrderController extends Controller
             $po_item->qty = $value->qty;
             $po_item->price = $value->price;
             $po_item->amount = $value->amount;
+            $po_item->safety_stock = $value->ss;
+            $po_item->min = $value->amount;
+            $po_item->max = $value->max;
             $po_item->save();
 
             $item_stock = ItemStock::where('item_id', $value->material)->first();
@@ -135,7 +139,25 @@ class PurchaseOrderController extends Controller
         }
     }
 
-    public function calculate_method(Request $request){
-        
+    public function calculate_method(Request $request)
+    {
+        $itemId = $request->material_id;
+        $transactionType = "Manufacture";  // if filtering empty string
+        $referenceDate = Carbon::createFromFormat('d/m/Y', $request->posting_date)->format('Y-m-d');;
+        $intervalDays = 30;
+        $lead_time = 2;
+
+        $var_query = StockLedgerEntry::selectRaw('MAX(ABS(qty_change)) AS max_qty, ROUND(SUM(ABS(qty_change)) / ?) AS avg_qty', [$intervalDays])
+            ->where('item_id', $itemId)
+            ->where('transaction_type', $transactionType)
+            ->whereRaw('posting_date > DATE_SUB(?, INTERVAL ? DAY)', [$referenceDate, $intervalDays])
+            ->whereRaw('posting_date <= ?', [$referenceDate])
+            ->first();
+
+        $result['safety_stock'] =($var_query->max_qty - $var_query->avg_qty) * $lead_time;
+        $result['min'] = $var_query->avg_qty * $lead_time + $result['safety_stock'];
+        $result['max'] = $result['min'] * 2;
+
+        return response()->json($result, 200);
     }
 }
