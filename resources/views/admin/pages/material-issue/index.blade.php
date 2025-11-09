@@ -39,8 +39,8 @@
     <div class="card basic-data-table">
         <div class="card-header d-flex gap-3">
             <div>
-                <input type="text" name="search_id" id="search_id" class="form-control h-25 search-input"
-                    placeholder="Kode Pemesanan">
+                <input type="text" name="search_item" id="search_item" class="form-control h-25 search-input"
+                    placeholder="Nama Material">
             </div>
             <div style="width:20rem;">
                 <select name="search_issue_type" id="search_issue_type" class="search-input form-select h-25" style="width:100%;">
@@ -60,7 +60,7 @@
                                 <input class="form-check-input" type="checkbox" id="check-all" />
                             </div>
                         </th>
-                        <th>Kode Issue</th>
+                        <th>Nama Material</th>
                         <th>Tipe Issue</th>
                         <th>Tanggal Issue</th>
                     </tr>
@@ -85,7 +85,7 @@
                     url: "{{ route('material-issue.get_data') }}",
                     data: function(d) {
                         d.issue_type = $('#search_issue_type').val();
-                        d.id = $('#search_id').val();
+                        d.item_name = $('#search_item').val();
                     }
                 },
                 columns: [{
@@ -101,8 +101,8 @@
                         }
                     },
                     {
-                        data: "id",
-                        name: "id"
+                        data: "item_name",
+                        name: "item_name"
                     },
                     {
                         data: "issue_type",

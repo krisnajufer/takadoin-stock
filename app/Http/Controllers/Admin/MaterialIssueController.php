@@ -21,11 +21,13 @@ class MaterialIssueController extends Controller
 
     public function get_data(Request $request)
     {
-        $query = MaterialIssue::query()
-            ->selectRaw('material_issues.id, DATE_FORMAT(material_issues.posting_date, "%d-%m-%Y") AS posting_date, material_issues.issue_type');
+        $query = MaterialIssueItem::query()
+            ->selectRaw('material_issues.id, material_issue_items.item_id, items.name AS item_name, DATE_FORMAT(material_issues.posting_date, "%d-%m-%Y") AS posting_date, material_issues.issue_type')
+            ->join('material_issues', 'material_issues.id', '=', 'material_issue_items.material_issue_id')
+            ->join('items', 'items.id', '=', 'material_issue_items.item_id');
 
-        if ($request->filled('id')) {
-            $query->where('material_issues.id', 'like', "%{$request->id}%");
+        if ($request->filled('item_name')) {
+            $query->where('items.name', 'like', "%{$request->item_name}%");
         }
         if ($request->filled('issue_type')) {
             $query->where('material_issues.issue_type', '=', "{$request->issue_type}");
