@@ -82,7 +82,7 @@ class PurchaseOrderController extends Controller
         $result["action"] = "update";
         $result['po_items'] = PurchaseOrderItem::join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_items.purchase_order_id')
             ->join('items', 'items.id', '=', 'purchase_order_items.item_id')
-            ->selectRaw("purchase_order_items.item_id, items.name AS item_name, purchase_order_items.qty, purchase_order_items.price, purchase_order_items.amount, purchase_order_items.safety_stock, purchase_order_items.min, purchase_order_items.max")
+            ->selectRaw("purchase_order_items.item_id, items.name AS item_name, purchase_order_items.qty, purchase_order_items.price, purchase_order_items.amount, purchase_order_items.safety_stock, purchase_order_items.min, purchase_order_items.max, purchase_order_items.current_qty")
             ->where('purchase_orders.id', $id)->get();
 
         return view('admin.pages.purchase-order.form', $result);
@@ -132,6 +132,7 @@ class PurchaseOrderController extends Controller
             $po_item->safety_stock = $value->ss;
             $po_item->min = $value->amount;
             $po_item->max = $value->max;
+            $po_item->current_qty = $value->current_qty;
             $po_item->save();
 
             $item_stock = ItemStock::where('item_id', $value->material)->first();
@@ -157,6 +158,10 @@ class PurchaseOrderController extends Controller
         $result['safety_stock'] =($var_query->max_qty - $var_query->avg_qty) * $lead_time;
         $result['min'] = $var_query->avg_qty * $lead_time + $result['safety_stock'];
         $result['max'] = $result['min'] * 2;
+        
+        $result['current_qty'] = StockLedgerEntry::where('item_id', $itemId)->sum('qty_change');
+
+
 
         return response()->json($result, 200);
     }

@@ -87,6 +87,7 @@
                                     <th>SS</th>
                                     <th>Min</th>
                                     <th>Max</th>
+                                    <th>Qty Sekarang</th>
                                     <th>Qty</th>
                                     <th>Harga</th>
                                     <th>Amount</th>
@@ -109,7 +110,7 @@
                                                     </option>
                                                 </select>
                                             </td>
-                                             <td>
+                                            <td>
                                                 <input type="text" name="ss[]" class="form-control numeric" value="{{ $poi->safety_stock }}" readonly>
                                             </td>
                                             <td>
@@ -117,6 +118,10 @@
                                             </td>
                                             <td>
                                                 <input type="text" name="max[]" class="form-control numeric" value="{{ $poi->max }}" readonly>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="curent_qty[]" class="form-control numeric"
+                                                    value="{{ $poi->current_qty }}" disabled>
                                             </td>
                                             <td>
                                                 <input type="text" name="qty[]" class="form-control numeric"
@@ -151,6 +156,9 @@
                                         </td>
                                         <td>
                                             <input type="text" name="max[]" class="form-control numeric" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="current_qty[]" class="form-control numeric" readonly>
                                         </td>
                                         <td>
                                             <input type="text" name="qty[]" class="form-control numeric qty">
@@ -202,10 +210,10 @@
 
             $('form').submit(function(e) {
                 e.preventDefault()
-                let {
-                    po_items,
-                    total
-                } = get_po_items();
+                let result = get_po_items();
+                if (result === false) return; // jangan lanjut kalau ada error
+
+                let { po_items, total } = result;
                 var formData = new FormData(this);
                 formData.append("_token", "{{ csrf_token() }}");
                 formData.append("po_items", JSON.stringify(po_items))
@@ -265,6 +273,9 @@
                     '</td>' +
                     '<td>' +
                     '<input type="text" name="max[]" class="form-control numeric" readonly>' +
+                    '</td>' +
+                    '<td>' +
+                    '<input type="text" name="current_qty[]" class="form-control numeric" readonly>' +
                     '</td>' +
                     '<td>' +
                     '<input type="text" name="qty[]" class="form-control numeric qty">' +
@@ -374,36 +385,86 @@
             }
         }
 
+        // function get_po_items() {
+        //     let po_items = [];
+        //     let total = 0;
+        //     $('#po_items tbody tr').each(function() {
+        //         let material = $(this).find('select[name="material[]"]').val();
+        //         let qty = $(this).find('input[name="qty[]"]').val();
+        //         let price = $(this).find('input[name="price[]"]').val();
+        //         let amount = $(this).find('input[name="amount[]"]').val();
+        //         let ss = $(this).find('input[name="ss[]"]').val();
+        //         let min = $(this).find('input[name="min[]"]').val();
+        //         let max = $(this).find('input[name="max[]"]').val();
+        //         let current_qty = $(this).find('input[name="current_qty[]"]').val();
+                
+        //         if ((current_qty + qty) > max) {
+        //             Swal.fire({
+        //                 icon: "error",
+        //                 title: "Warning",
+        //                 text: `Qty dipesan dan yang tersedia saat ini melebihi perhitungan Max mohon disesuaikan`,
+        //                 timer: 3000
+        //             });
+                    
+        //             return false
+        //         }
+        //         if (material && qty && price && amount) {
+        //             po_items.push({
+        //                 material: material,
+        //                 qty: qty,
+        //                 price: price,
+        //                 amount: amount,
+        //                 ss: ss,
+        //                 min: min,
+        //                 max: max,
+        //             });
+        //             total += parseInt(amount);
+        //         }
+        //     });
+
+        //     return {
+        //         po_items,
+        //         total
+        //     };
+        // }
+
         function get_po_items() {
             let po_items = [];
             let total = 0;
+            let hasError = false;
+
             $('#po_items tbody tr').each(function() {
                 let material = $(this).find('select[name="material[]"]').val();
-                let qty = $(this).find('input[name="qty[]"]').val();
-                let price = $(this).find('input[name="price[]"]').val();
-                let amount = $(this).find('input[name="amount[]"]').val();
-                let ss = $(this).find('input[name="ss[]"]').val();
-                let min = $(this).find('input[name="min[]"]').val();
-                let max = $(this).find('input[name="max[]"]').val();
+                let material_name = $(this).find('select[name="material[]"]').text();
+                let qty = parseFloat($(this).find('input[name="qty[]"]').val()) || 0;
+                let price = parseFloat($(this).find('input[name="price[]"]').val()) || 0;
+                let amount = parseFloat($(this).find('input[name="amount[]"]').val()) || 0;
+                let ss = parseFloat($(this).find('input[name="ss[]"]').val()) || 0;
+                let min = parseFloat($(this).find('input[name="min[]"]').val()) || 0;
+                let max = parseFloat($(this).find('input[name="max[]"]').val()) || 0;
+                let current_qty = parseFloat($(this).find('input[name="current_qty[]"]').val()) || 0;
+
+                if ((current_qty + qty) > max) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Warning",
+                        html: `Item <b>${material_name}</b> Qty dipesan dan yang tersedia saat ini melebihi perhitungan Max. Mohon disesuaikan.`,
+                        timer: 5000,
+                        timerProgressBar: true
+                    });
+                    hasError = true;
+                    return false; // hentikan iterasi
+                }
 
                 if (material && qty && price && amount) {
-                    po_items.push({
-                        material: material,
-                        qty: qty,
-                        price: price,
-                        amount: amount,
-                        ss: ss,
-                        min: min,
-                        max: max,
-                    });
-                    total += parseInt(amount);
+                    po_items.push({ material, qty, price, amount, ss, min, max , current_qty});
+                    total += amount;
                 }
             });
 
-            return {
-                po_items,
-                total
-            };
+            if (hasError) return false; // hentikan fungsi utama
+
+            return { po_items, total };
         }
 
         function getDatePicker(receiveID) {
@@ -434,6 +495,8 @@
                 row.find('input[name="ss[]"]').val(res.safety_stock);
                 row.find('input[name="min[]"]').val(res.min);
                 row.find('input[name="max[]"]').val(res.max);
+                row.find('input[name="current_qty[]"]').val(res.current_qty);
+                row.find('input[name="qty[]"]').val(res.max - res.current_qty);
             });
         }
     </script>
